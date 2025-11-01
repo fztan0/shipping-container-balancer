@@ -26,8 +26,8 @@ def main():
     print("HIGH-CONTRAST TEXT DISPLAY TEST\n")
 
     for style in styles:
-        print(f"{style['bg']}{style['fg']}{BOLD}== {style['name']} =={RESET}")
-        print(f"{style['bg']}{style['fg']} {sample_text} {RESET}")
+        print(f"{style['bg']}{style['fg']}{BOLD} == {style['name']} == {RESET}")
+        print(f"{style['bg']}{style['fg']}{sample_text} {RESET}")
         time.sleep(0.5)
 
 if __name__ == "__main__":
