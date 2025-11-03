@@ -4,6 +4,7 @@ import time
 RESET = "\033[0m" # default text attributes
 
 # ANSI color styles dict: (name, foreground, background)
+# https://jakob-bagterp.github.io/colorist-for-python/ansi-escape-codes/standard-16-colors/#foreground-text-and-background-colors
 styles = [
     {"name": "Black on Blue",     "fg": "\033[104m", "bg": "\033[44m"},
     {"name": "Black on Cyan",     "fg": "\033[106m", "bg": "\033[30m"},
