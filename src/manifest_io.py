@@ -1,7 +1,5 @@
 import manifest_parser
-import numpy
-
-UNUSED = -1
+import puzzle_state
 
 def get_file_name() -> str:
       input_file_name = input("Enter name of manifest: ")
@@ -15,14 +13,8 @@ def get_file_name() -> str:
       return input_file_name
 
 
-def load_ship_manifest(file_path: str) -> tuple[numpy.ndarray, dict[tuple[int, int], str]]:
-      # final product should be 8 x 12 np.ndarray grid
-      # with weights as float values, NAN for empty, -1 for UNUSED
-      grid = numpy.full((8, 12), numpy.nan, dtype=float)
-
-      # final product should be dictionary mapping (row, column) to description text, not including NAN or UNUSED as hinted above
-      # store descriptions: description_lines[(r,c)] = "description_text"
-      description_lines = {}
+def load_ship_manifest(file_path: str) -> 'PuzzleState':
+      manifest_data = []
 
       with open(file_path, "r") as file:
             for line in file:
@@ -30,23 +22,17 @@ def load_ship_manifest(file_path: str) -> tuple[numpy.ndarray, dict[tuple[int, i
                   if not line:
                         continue
 
-                  # expected line format: [row,column], {WWWWW}, text_field
+                  # parse line
                   row, column, weight, text_field = manifest_parser.parse_manifest_line(line)
 
-                  # convert to 0-based index
+                  # convert to 0-based indexes
                   row_index = row - 1
                   column_index = column - 1
 
-                  if text_field == "NAN":
-                        grid[row_index, column_index] = numpy.nan
-                  elif text_field == "UNUSED":
-                        grid[row_index, column_index] = UNUSED
-                  else:
-                        grid[row_index, column_index] = weight
-                        description_lines[(row, column)] = text_field
+                  # for PuzzleState, store all data including NAN/UNUSED flags
+                  manifest_data.append((row_index, column_index, weight, text_field))
 
-      return grid, description_lines
+      return puzzle_state.PuzzleState.from_manifest_data(manifest_data)
 
-
-def load_manifest_from_user():
+def load_manifest_from_user() -> 'PuzzleState':
       return load_ship_manifest(get_file_name())
