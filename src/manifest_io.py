@@ -16,8 +16,13 @@ def get_file_name() -> str:
 
 
 def load_ship_manifest(file_path: str) -> tuple[numpy.ndarray, dict[tuple[int, int], str]]:
+      # final product should be 8 x 12 np.ndarray grid
+      # with weights as float values, NAN for empty, -1 for UNUSED
       grid = numpy.full((8, 12), numpy.nan, dtype=float)
-      description_lines = {} # store descriptions: desc[(r,c)] = "description_text"
+
+      # final product should be dictionary mapping (row, column) to description text, not including NAN or UNUSED as hinted above
+      # store descriptions: description_lines[(r,c)] = "description_text"
+      description_lines = {}
 
       with open(file_path, "r") as file:
             for line in file:
