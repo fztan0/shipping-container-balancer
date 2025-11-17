@@ -32,7 +32,8 @@ def load_ship_manifest(file_path: str) -> 'PuzzleState':
                   # for PuzzleState, store all data including NAN/UNUSED flags
                   manifest_data.append((row_index, column_index, weight, text_field))
 
-      return puzzle_state.PuzzleState.from_manifest_data(manifest_data)
+      # return entire puzzle state from the loaded manifest data
+      return puzzle_state.PuzzleState.generate_state_from_manifest_data(manifest_data)
 
 def load_manifest_from_user() -> 'PuzzleState':
       return load_ship_manifest(get_file_name())
