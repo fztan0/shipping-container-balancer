@@ -8,6 +8,8 @@ def main():
       debug.debug_print_formatted_loaded_manifest(puzzle)
       # debug.debug_print_raw_loaded_manifest(puzzle_state)
       debug.debug_print_weight_grid(puzzle)
+      #debug.debug_print_totalWeight_eachSide(puzzle)
+
 
 
 
