@@ -20,7 +20,6 @@ def debug_print_formatted_loaded_manifest(state: puzzle_state):
                   weight_field = f"{weight:05d}"
 
                   print(f"[{r:02d},{c:02d}], {{{weight_field}}}, {token}")
-
       return
 
 

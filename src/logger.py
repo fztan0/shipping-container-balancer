@@ -1,32 +1,55 @@
 import datetime
+import manifest_io
+import os
 
 events = []
 start_time = None
+# wait_thread = false # initialize the thread in the beginnging of the program
 
+# run this at the start of the day
 def initialize_logger():
   global start_time
-  start_time = datetime.datetime.now
+  start_time = datetime.datetime.now()
   log_message("Program was started.")
 
 def timestamp():
-  current_time = datetime.now()
+  current_time = datetime.datetime.now()
   return current_time.strftime("%m %d %Y: %H:%M")
 
 def log_message(message):
   events.append(f"{timestamp()} {message}")
 
-def log_manifest_opened(input_file, num_containers):
-  events.append(f"{timestamp()} Manifest {input_file} is opened, there are {num_containers} on the ship.")
+# "Manifest (input_file_name) is opened, there are (num_containers) containers on the ship"
+def log_manifest_opened(num_containers):
+  events.append(f"{timestamp()} Manifest {manifest_io.MANIFEST_FILENAME} is opened, there are {num_containers} on the ship.")
 
+# "Balance solution found, it will require 9 moves/34 minutes."
 def log_balance_sol(num_moves, duration):
   events.append(f"{timestamp()} Balance solution found, it will require {num_moves}/{duration} minutes.")
 
-def log_move_operation(prev, updated): # need to format input coordinate
-  events.append(f"{timestamp()} {prev} was moved to {updated}")
+# "[#,#] was moved to [#,#]"
+# put log_move_operation into a thread treat it like a while loop bookkeeping whether the thread is true and false
+# puzzle_state
+def log_move_operation(thread, prev_x, prev_y, updated_x, updated_y): # need to format input coordinate
+  # if not isinstance(num_containers, int):
+  #   raise TypeError("Please enter a valid coordinate that is an int.")
+  # wait until enter is click -> false
+  # find when the user clicks enter
+  events.append(f"{timestamp()} [{prev_x}, {prev_y}] was moved to [{updated_x}, {updated_y}]")
+  # reset the thread after the move message
 
-def log_finish_operation(input_file):
-  events.append(f"{timestamp()} Finished a Cycle. Manifest {input_file} was written to desktop, and a reminder pop-up to operator to send file was displayed.")
+# "Finished a Cycle. Manifest HMMAlgecirasOUTBOUND.txt was written to desktop, and a
+# reminder pop-up to operator to send file was displayed"
+def log_finish_operation():
+  events.append(f"{timestamp()} Finished a Cycle. Manifest {manifest_io.MANIFEST_FILENAME} was written to desktop, and a reminder pop-up to operator to send file was displayed.")
 
+# at the very end of the program / day
 def log_kill():
   log_message("Program was shut down.")
+
+def write_logger_to_desktop(): # add a parameter of name_of_port because not all ports will be by MrKeogh
+  filename = "KeoghsPort" + start_time.strftime("%m_%d_%Y_%H%M") + ".txt"
+  desktop_location = os.path.join(os.path.expanduser("~"), "Desktop", filename)
   
+  with open(desktop_location, "w") as f:
+    f.write("\n".join(events))
