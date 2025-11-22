@@ -37,9 +37,11 @@ def visualize_state(state: PuzzleState, message: Optional[str] = None, source_lo
             if not cell.exists:
                 # nan
                 ax.text(col + 0.5, y_pos, 'NAN', ha='center', va='center', fontsize = 9, fontweight = 'bold', color = 'white')
+                ax.text(col + 0.5, y_pos - 0.2, f'{cell.weight}', ha='center', va = 'center', fontsize = 8, color = 'white')
             elif cell.weight == 0:
                 # unused
                 ax.text(col + 0.5, y_pos, 'UNUSED', ha='center', va='center', fontsize = 9, fontweight = 'bold', color = '#666666')
+                ax.text(col + 0.5, y_pos - 0.2, f'{cell.weight}', ha='center', va = 'center', fontsize = 8, color = 'black')
                 # Note: will expand for source and target cells
             else:
                 # containers
