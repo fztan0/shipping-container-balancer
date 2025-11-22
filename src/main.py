@@ -1,5 +1,6 @@
 import debug
 import manifest_io
+import visualization
 
 def main():
       # example receive
@@ -9,8 +10,9 @@ def main():
       # debug.debug_print_raw_loaded_manifest(puzzle_state)
       debug.debug_print_weight_grid(puzzle)
       #debug.debug_print_totalWeight_eachSide(puzzle)
-      #debug.debug_goalstate_initialmanifest(puzzle)
-      debug.debug_getContainers(puzzle)
+      visualization.visualize_state(puzzle)
+
+
 
 
 if __name__ == "__main__":
