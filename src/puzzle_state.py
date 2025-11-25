@@ -28,9 +28,9 @@ class PuzzleState:
 
             for row, col, weight, desc in manifest_data:
                   if desc == "NAN":
-                        state.grid[row][col] = Cell(exists = False, weight = 0, description="")
+                        state.grid[row][col] = Cell(exists = False, weight = 0, description=desc)
                   elif desc == "UNUSED":
-                        state.grid[row][col] = Cell(exists = True, weight = 0, description="")
+                        state.grid[row][col] = Cell(exists = True, weight = 0, description=desc)
                   else:
                         state.grid[row][col] = Cell(exists = True, weight = weight, description=desc)
 
