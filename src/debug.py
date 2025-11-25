@@ -55,12 +55,41 @@ def debug_goalstate_initialmanifest(state: puzzle_state):
       print(f"Is goal? : {isGoal}")
       return
 
+def debug_getNextPosition(state: puzzle_state):
+      #reflect example from cs179 lecture slides
+      containers = move_operators.getNextMoves(state)
+      if len(containers) == 0:
+            print("No containers")
+      else:
+            for (x,y), _ in containers:
+                  print((x+1,y+1))
+      return
+
 def debug_getContainers(state: puzzle_state):
       #reflect example from cs179 lecture slides
       containers = move_operators.getAllContainers(state)
       if len(containers) == 0:
             print("No containers")
       else:
-            print(containers)
+            for (x,y), _ in containers:
+                  print((x,y))
       return
+
+def debug_validContainers(state: puzzle_state):
+      containers = move_operators.getAllContainers(state)
+      if len(containers) == 0:
+            print("No containers")
+            return
+      else:
+            print(f"Original Containers: {len(containers)}")
+            for (x,y), _ in containers:
+                  
+                  print(f"({x+1},{y+1})")
+
+      validContainers = move_operators.validContainers(state, containers)
+      print(f"Valid Containers: {len(validContainers)}")
+      for (x,y), _ in validContainers:
+                  print(f"({x+1},{y+1})")
+      return
+
 
