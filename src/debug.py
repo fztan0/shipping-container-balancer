@@ -93,3 +93,23 @@ def debug_validContainers(state: puzzle_state):
       return
 
 
+def debug_bfs(state: puzzle_state):
+      containers = move_operators.getAllContainers(state)
+      if len(containers) == 0:
+            print("No containers")
+            return
+      validContainers = move_operators.validContainers(state, containers)
+      nextContainers = move_operators.getNextMoves(state)
+      for container in validContainers:
+            containerStart = container
+            (startX, startY) , _ = containerStart
+            print(f"Starting Position: ({startX+1},{startY+1})")
+            for nextC in nextContainers:
+                  containerEnd = nextC
+                  (endX, endY), _ = containerEnd
+                  if(((startX + 1), startY) != (endX, endY)): #a final position can't move up 1. (gravity)
+                        print(f"Final Position: ({endX+1},{endY+1})")
+                        cost = move_operators.bfs(state, containerStart, containerEnd)
+                        print(f"Cost: {cost}")
+
+

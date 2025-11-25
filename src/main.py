@@ -12,7 +12,8 @@ def main():
       #debug.debug_print_totalWeight_eachSide(puzze)
       #debug.debug_getContainers(puzzle)
       #debug.debug_validContainers(puzzle)
-      debug.debug_getNextPosition(puzzle)
+      #debug.debug_getNextPosition(puzzle)
+      debug.debug_bfs(puzzle)
       visualization.visualize_state(puzzle)
 
 
