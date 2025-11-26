@@ -1,6 +1,9 @@
 import puzzle_state
 import search_algorithm
 import move_operators
+import search_nodes
+import hashing
+import visualization
 
 def debug_print_formatted_loaded_manifest(state: puzzle_state):
       for r in range(1, 9): # rows 1–8
@@ -55,12 +58,98 @@ def debug_goalstate_initialmanifest(state: puzzle_state):
       print(f"Is goal? : {isGoal}")
       return
 
+def debug_getNextPosition(state: puzzle_state):
+      #reflect example from cs179 lecture slides
+      containers = move_operators.getNextMoves(state)
+      if len(containers) == 0:
+            print("No containers")
+      else:
+            for (x,y), _ in containers:
+                  print((x+1,y+1))
+      return
+
 def debug_getContainers(state: puzzle_state):
       #reflect example from cs179 lecture slides
       containers = move_operators.getAllContainers(state)
       if len(containers) == 0:
             print("No containers")
       else:
-            print(containers)
+            for (x,y), _ in containers:
+                  print((x,y))
       return
+
+def debug_validContainers(state: puzzle_state):
+      containers = move_operators.getAllContainers(state)
+      if len(containers) == 0:
+            print("No containers")
+            return
+      else:
+            print(f"Original Containers: {len(containers)}")
+            for (x,y), _ in containers:
+                  
+                  print(f"({x+1},{y+1})")
+
+      validContainers = move_operators.validContainers(state, containers)
+      print(f"Valid Containers: {len(validContainers)}")
+      for (x,y), _ in validContainers:
+                  print(f"({x+1},{y+1})")
+      return
+
+
+def debug_bfs(state: puzzle_state):
+      containers = move_operators.getAllContainers(state)
+      if len(containers) == 0:
+            print("No containers")
+            return
+      validContainers = move_operators.validContainers(state, containers)
+      nextContainers = move_operators.getNextMoves(state)
+      for container in validContainers:
+            containerStart = container
+            (startX, startY) , _ = containerStart
+            print(f"Starting Position: ({startX+1},{startY+1})")
+            for nextC in nextContainers:
+                  containerEnd = nextC
+                  (endX, endY), _ = containerEnd
+                  if(((startX + 1), startY) != (endX, endY)): #a final position can't move up 1. (gravity)
+                        print(f"Final Position: ({endX+1},{endY+1})")
+                        cost = search_nodes.bfs(state, containerStart, containerEnd)
+                        print(f"Cost: {cost}")
+
+def debug_testCraneCost(state: puzzle_state):
+      cranePosition = [(8,0), puzzle_state.Cell(exists=True, weight=0, description="UNUSED")]
+      (craneX, craneY) , _ = cranePosition
+      startingPosition = [(0,5), puzzle_state.Cell(exists=True, weight=99, description="B")]
+      (startX, startY) , _ = startingPosition
+      cost = search_nodes.bfs(state, startingPosition, cranePosition)
+      print(f"Starting Position: ({craneX+1},{craneY+1})")
+      print(f"Final Position: ({startX+1},{startY+1})")
+      print(f"Cost: {cost}")
+
+def debug_updateState(state: puzzle_state):
+      emptyPosition = [(1, 7), puzzle_state.Cell(exists=True, weight=0, description="UNUSED")]
+      container = [(0,1), puzzle_state.Cell(exists=True, weight=101, description="Z")]
+      newState = search_nodes.updatedState(state, emptyPosition, container)
+      for row in reversed(newState.grid):
+            print([cell.weight if cell.exists else 'NAN' for cell in row])
+      return
+
+def debug_hashMap(state: puzzle_state):
+      test_hashMap = {}
+      key = hashing.createKey(state)
+      test_hashMap[key] = True
+      if key not in test_hashMap:
+            print("Unique")
+      else:
+            print("duplicate")
+      return
+      
+def debug_ucsAlg(state: puzzle_state):
+      finalCost, finalPuzzleState, allMoves = search_algorithm.uniformCostSearch(state)
+      print(f"Final Cost: {finalCost}")
+      print(f"{(allMoves)}")
+      visualization.visualize_state(finalPuzzleState)
+
+
+
+
 

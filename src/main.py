@@ -9,7 +9,14 @@ def main():
       debug.debug_print_formatted_loaded_manifest(puzzle)
       # debug.debug_print_raw_loaded_manifest(puzzle_state)
       debug.debug_print_weight_grid(puzzle)
-      #debug.debug_print_totalWeight_eachSide(puzzle)
+      #debug.debug_print_totalWeight_eachSide(puzze)
+      #debug.debug_getContainers(puzzle)
+      #debug.debug_validContainers(puzzle)
+      #debug.debug_getNextPosition(puzzle)
+      #debug.debug_testCraneCost(puzzle)
+      # debug.debug_updateState(puzzle)
+      #debug.debug_bfs(puzzle)
+      debug.debug_ucsAlg(puzzle)
       visualization.visualize_state(puzzle)
 
 
