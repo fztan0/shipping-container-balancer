@@ -75,5 +75,3 @@ def debug_logger_example():
       logger.log_finish_operation()
       logger.log_kill()
       logger.write_logger_to_desktop()
-
-
