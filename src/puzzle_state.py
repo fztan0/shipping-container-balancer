@@ -28,11 +28,12 @@ class PuzzleState:
             state = cls.create_empty()
             num_containers = 0
             for row, col, weight, desc in manifest_data:
-                  state.grid[row][col] = Cell(
-                        exists=True,
-                        weight=weight,
-                        description=desc,
-                  )
+                  if desc == "NAN":
+                        state.grid[row][col] = Cell(exists = False, weight = 0, description="")
+                  elif desc == "UNUSED":
+                        state.grid[row][col] = Cell(exists = True, weight = 0, description="")
+                  else:
+                        state.grid[row][col] = Cell(exists = True, weight = weight, description=desc)
                   
                   if weight != 0:
                         num_containers += 1

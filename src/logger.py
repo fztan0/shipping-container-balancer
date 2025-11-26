@@ -4,7 +4,6 @@ import os
 
 events = []
 start_time = None
-# wait_thread = false # initialize the thread in the beginnging of the program
 
 # run this at the start of the day
 def initialize_logger():
@@ -14,7 +13,7 @@ def initialize_logger():
 
 def timestamp():
   current_time = datetime.datetime.now()
-  return current_time.strftime("%m %d %Y: %H:%M")
+  return current_time.strftime("%m %d %Y: %H:%M:%S")
 
 def log_message(message):
   events.append(f"{timestamp()} {message}")
@@ -27,16 +26,25 @@ def log_manifest_opened(num_containers):
 def log_balance_sol(num_moves, duration):
   events.append(f"{timestamp()} Balance solution found, it will require {num_moves}/{duration} minutes.")
 
-# "[#,#] was moved to [#,#]"
-# put log_move_operation into a thread treat it like a while loop bookkeeping whether the thread is true and false
-# puzzle_state
-def log_move_operation(thread, prev_x, prev_y, updated_x, updated_y): # need to format input coordinate
-  # if not isinstance(num_containers, int):
-  #   raise TypeError("Please enter a valid coordinate that is an int.")
-  # wait until enter is click -> false
-  # find when the user clicks enter
-  events.append(f"{timestamp()} [{prev_x}, {prev_y}] was moved to [{updated_x}, {updated_y}]")
-  # reset the thread after the move message
+# e.g (01, 04) to (03, 03) // (01, 03) to (03, 04) // (04, 01) to (10, 02)
+
+def log_move_operation(list_moves):
+  for i in range(0, len(list_moves), 2):
+    prev = list_moves[i]
+    updated = list_moves[i+1]
+
+    input_user = input("Select ENTER once move is done or 'M' to log a message")
+
+    if input_user.strip() == "":
+      log_message(f"[{prev}] was moved to [{updated}]")
+
+    if input_user == 'm':
+      note = input("Enter note:")
+      log_message(note)
+      log_message(f"[{prev}] was moved to [{updated}]")
+
+    
+  
 
 # "Finished a Cycle. Manifest HMMAlgecirasOUTBOUND.txt was written to desktop, and a
 # reminder pop-up to operator to send file was displayed"

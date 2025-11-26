@@ -1,5 +1,8 @@
 import puzzle_state
 import search_algorithm
+import move_operators
+import manifest_io
+import logger
 
 def debug_print_formatted_loaded_manifest(state: puzzle_state):
       for r in range(1, 9): # rows 1–8
@@ -46,5 +49,31 @@ def debug_print_totalWeight_eachSide(state: puzzle_state):
       isGoal = search_algorithm.isGoalState(state, p0, s0)
       print(f"Is goal? : {isGoal}")
       return
+
+def debug_goalstate_initialmanifest(state: puzzle_state):
+      #reflect example from cs179 lecture slides
+      isGoal = search_algorithm.valid_edgecase_initialContainers(state)
+      print(f"Is goal? : {isGoal}")
+      return
+
+def debug_getContainers(state: puzzle_state):
+      #reflect example from cs179 lecture slides
+      containers = move_operators.getAllContainers(state)
+      if len(containers) == 0:
+            print("No containers")
+      else:
+            print(containers)
+      return
+
+def debug_logger_example():
+      logger.initialize_logger()
+      manifest_io.load_manifest_from_user() 
+
+      #fake list of moves
+      list_moves = [("01", "04"), ("03", "03"), ("01", "03"), ("03", "04"), ("04", "01"), ("10", "02")]
+      logger.log_move_operation(list_moves)
+      logger.log_finish_operation()
+      logger.log_kill()
+      logger.write_logger_to_desktop()
 
 
