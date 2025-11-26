@@ -3,6 +3,7 @@ import search_algorithm
 import move_operators
 import search_nodes
 import hashing
+import visualization
 
 def debug_print_formatted_loaded_manifest(state: puzzle_state):
       for r in range(1, 9): # rows 1–8
@@ -115,11 +116,11 @@ def debug_bfs(state: puzzle_state):
                         print(f"Cost: {cost}")
 
 def debug_testCraneCost(state: puzzle_state):
-      cranePosition = [(0, 8), puzzle_state.Cell(exists=True, weight=0, description="UNUSED")]
+      cranePosition = [(8,0), puzzle_state.Cell(exists=True, weight=0, description="UNUSED")]
       (craneX, craneY) , _ = cranePosition
-      startingPosition = [(1,1), puzzle_state.Cell(exists=True, weight=99, description="Tools for JD")]
+      startingPosition = [(0,5), puzzle_state.Cell(exists=True, weight=99, description="B")]
       (startX, startY) , _ = startingPosition
-      cost = search_nodes.bfs(state, startingPosition  ,cranePosition)
+      cost = search_nodes.bfs(state, startingPosition, cranePosition)
       print(f"Starting Position: ({craneX+1},{craneY+1})")
       print(f"Final Position: ({startX+1},{startY+1})")
       print(f"Cost: {cost}")
@@ -145,7 +146,10 @@ def debug_hashMap(state: puzzle_state):
 def debug_ucsAlg(state: puzzle_state):
       finalCost, finalPuzzleState, allMoves = search_algorithm.uniformCostSearch(state)
       print(f"Final Cost: {finalCost}")
-      print(f"{allMoves}")
+      print(f"{(allMoves)}")
+      visualization.visualize_state(finalPuzzleState)
+
+
 
 
 

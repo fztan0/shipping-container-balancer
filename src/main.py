@@ -13,9 +13,9 @@ def main():
       #debug.debug_getContainers(puzzle)
       #debug.debug_validContainers(puzzle)
       #debug.debug_getNextPosition(puzzle)
-      # debug.debug_testCraneCost(puzzle)
+      #debug.debug_testCraneCost(puzzle)
       # debug.debug_updateState(puzzle)
-      # debug.debug_hashMap(puzzle)
+      #debug.debug_bfs(puzzle)
       debug.debug_ucsAlg(puzzle)
       visualization.visualize_state(puzzle)
 

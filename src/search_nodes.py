@@ -61,7 +61,7 @@ def bfs(state: puzzle_state.PuzzleState, originPoint: list[tuple[int,int], puzzl
             rowNext, colNext = nextPosition
             #need to check if the next position is valid and unvisted
             if isBoundsValid((rowNext, colNext)) and visited[rowNext][colNext] == False:
-                if grid[rowNext][colNext].description == "UNUSED": #might need to adjust this later for a state that "is in the air" above the state
+                if grid[rowNext][colNext].description == "UNUSED" or (rowNext, colNext) == goalPoint: #might need to adjust this later for a state that "is in the air" above the state
                     calculate_cost = currentCost + 1
                     queue.append([nextPosition, calculate_cost]) 
     return 0

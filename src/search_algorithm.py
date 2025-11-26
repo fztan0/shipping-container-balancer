@@ -3,7 +3,8 @@ import move_operators
 import search_nodes
 import heapq
 import hashing
-
+import itertools # https://docs.python.org/3/library/itertools.html#itertools.count. using this python library to get a unique count
+import copy
 
 '''
 Parameters:
@@ -97,37 +98,39 @@ Return:
 
 '''
 def uniformCostSearch(startingState: puzzle_state.PuzzleState) -> 'Path & Cost':
+    uniqueId = itertools.count() #iterator
     #if starting state is the goal return an empty list. No moves required
     if valid_edgecase_initialContainers(startingState) == True:
-        return ([], 0)
+        return (0, startingState, [])
     hashMap = {}
     key = hashing.createKey(startingState)
     hashMap[key] = True
     #create crane position to calculate cost from crane to starting state
-    cranePosition = [(0, 8), puzzle_state.Cell(exists=True, weight=0, description="UNUSED")]
+    cranePosition = [(8,0), puzzle_state.Cell(exists=True, weight=0, description="UNUSED")]
     #start at cranePosition. leave destination as (0,0) for now
     move = [cranePosition[0], (0,0)]
     listofMoves = []
     listofMoves.append(move)
     priority_queue = []
     startAtCrane = True
-    cranePosition = [(0, 8), puzzle_state.Cell(exists=True, weight=0, description="UNUSED")]
-    #initalize a minheap and keep track of cost, puzzle state, list of moves
-    heapq.heappush(priority_queue, (0, startingState, listofMoves))
+    #initalize a minheap and keep track of cost, uniqueId, puzzle state, list of moves
+    #create a uniqueId to account as choice factor when two states have the same cost
+    heapq.heappush(priority_queue, (0, next(uniqueId), startingState, listofMoves))
     while priority_queue:
-        currentCost, currentState, currentMoves =  heapq.heappop(priority_queue)
+        currentCost, _, currentState, currentMoves =  heapq.heappop(priority_queue)
+        movesContainer = copy.deepcopy(currentMoves)
         ph,sh = getCurrentWeight(currentState)
         if isGoalState(currentState, ph, sh):
-            numMoves = len(currentMoves)
-            lastContainerCoord = currentMoves[numMoves - 1] #get the coordinate of the last container
+            numMoves = len(movesContainer)
+            lastContainerCoord = movesContainer[numMoves - 1] #get the coordinate of the last container
             endX,endY = lastContainerCoord[1] #destination of the lastContainer
             finalContainerCell = currentState.grid[endX][endY]
-            lastContainer = [(endX,endY), finalContainerCell] 
+            lastContainer = [(endX,endY), finalContainerCell]
             cost = search_nodes.bfs(currentState, lastContainer, cranePosition) #get the cost from going from last container to cranePosition
             currentCost = currentCost + cost
             #add the move from last cotaniner back to crane position
-            currentMoves.append([(endX,endY), (0,8)])
-            return currentCost, currentState, currentMoves 
+            movesContainer.append([(endX,endY), (8,0)])
+            return currentCost, currentState, movesContainer 
         #gets all the containers in the state
         containers = move_operators.getAllContainers(currentState)
         #filters and only get valid containers
@@ -136,19 +139,92 @@ def uniformCostSearch(startingState: puzzle_state.PuzzleState) -> 'Path & Cost':
         for container in validContainers:
             (startX, startY) , _ = container
             if startAtCrane: #need to intially add the cost going from the cranePosition to firstContainer as well as updating the current move
-                currentMoves[0] = [(0,8), (startX,startY)]
-                currentCost = currentCost + search_nodes.bfs(currentState, cranePosition, container)
+                movesContainer[0] = [(8,0), (startX,startY)]
+                craneCost = search_nodes.bfs(currentState, cranePosition, container)
+            else:
+                craneCost = 0
             for nextC in nextContainers:
                 (endX, endY), _ = nextC
                 if(((startX + 1), startY) != (endX, endY)): #a final position can't move up 1. (gravity)
+                        childMoves = movesContainer.copy()
                         updateState = search_nodes.updatedState(currentState, container, nextC)
                         key = hashing.createKey(updateState)
                         if key not in hashMap: #only queue unique states
                             cost = search_nodes.bfs(currentState, container, nextC)
-                            currentCost = currentCost + cost
-                            currentMoves.append([(startX, startY), (endX, endY)])
-                            heapq.heappush(priority_queue, (currentCost, updateState, listofMoves))
+                            childCost = currentCost + cost + craneCost
+                            childMoves.append([(startX, startY), (endX, endY)])
+                            #next (iter) increments by 1 resulting in a uniqueId each time
+                            heapq.heappush(priority_queue, (childCost, next(uniqueId), updateState, childMoves))
                             hashMap[key] = True #update hashMap
         #already accounted for the crane so set it to false
         startAtCrane = False
     return
+
+
+# if startAtCrane: #need to intially add the cost going from the cranePosition to firstContainer as well as updating the current move
+#                 currentMoves[0] = [(0,8), (startX,startY)]
+#                 currentCost = currentCost + search_nodes.bfs(currentState, cranePosition, container)
+
+
+
+
+
+# def uniformCostSearch(startingState: puzzle_state.PuzzleState) -> 'Path & Cost':
+#     uniqueId = itertools.count() #iterator
+#     #if starting state is the goal return an empty list. No moves required
+#     if valid_edgecase_initialContainers(startingState) == True:
+#         return ([], 0)
+#     hashMap = {}
+#     key = hashing.createKey(startingState)
+#     hashMap[key] = True
+#     #create crane position to calculate cost from crane to starting state
+#     cranePosition = [(0, 8), puzzle_state.Cell(exists=True, weight=0, description="UNUSED")]
+#     #start at cranePosition. leave destination as (0,0) for now
+#     move = [cranePosition[0], (0,0)]
+#     listofMoves = []
+#     listofMoves.append(move)
+#     priority_queue = []
+#     startAtCrane = True
+#     cranePosition = [(0, 8), puzzle_state.Cell(exists=True, weight=0, description="UNUSED")]
+#     #initalize a minheap and keep track of cost, uniqueId, puzzle state, list of moves
+#     #create a uniqueId to account as choice factor when two states have the same cost
+#     heapq.heappush(priority_queue, (0, next(uniqueId), startingState, listofMoves))
+#     while priority_queue:
+#         currentCost, _, currentState, currentMoves =  heapq.heappop(priority_queue)
+#         ph,sh = getCurrentWeight(currentState)
+#         if isGoalState(currentState, ph, sh):
+#             numMoves = len(currentMoves)
+#             lastContainerCoord = currentMoves[numMoves - 1] #get the coordinate of the last container
+#             endX,endY = lastContainerCoord[1] #destination of the lastContainer
+#             finalContainerCell = currentState.grid[endX][endY]
+#             lastContainer = [(endX,endY), finalContainerCell] 
+#             cost = search_nodes.bfs(currentState, lastContainer, cranePosition) #get the cost from going from last container to cranePosition
+#             currentCost = currentCost + cost
+#             #add the move from last cotaniner back to crane position
+#             currentMoves.append([(endX,endY), (0,8)])
+#             return currentCost, currentState, currentMoves 
+#         #gets all the containers in the state
+#         containers = move_operators.getAllContainers(currentState)
+#         #filters and only get valid containers
+#         validContainers = move_operators.validContainers(currentState, containers)
+#         nextContainers = move_operators.getNextMoves(currentState)
+#         for container in validContainers:
+#             (startX, startY) , _ = container
+#             if startAtCrane: #need to intially add the cost going from the cranePosition to firstContainer as well as updating the current move
+#                 currentMoves[0] = [(0,8), (startX,startY)]
+#                 currentCost = currentCost + search_nodes.bfs(currentState, cranePosition, container)
+#             for nextC in nextContainers:
+#                 (endX, endY), _ = nextC
+#                 if(((startX + 1), startY) != (endX, endY)): #a final position can't move up 1. (gravity)
+#                         updateState = search_nodes.updatedState(currentState, container, nextC)
+#                         key = hashing.createKey(updateState)
+#                         if key not in hashMap: #only queue unique states
+#                             cost = search_nodes.bfs(currentState, container, nextC)
+#                             currentCost = currentCost + cost
+#                             currentMoves.append([(startX, startY), (endX, endY)])
+#                             #next (iter) increments by 1 resulting in a uniqueId each time
+#                             heapq.heappush(priority_queue, (currentCost, next(uniqueId), updateState, listofMoves))
+#                             hashMap[key] = True #update hashMap
+#         #already accounted for the crane so set it to false
+#         startAtCrane = False
+#     return
