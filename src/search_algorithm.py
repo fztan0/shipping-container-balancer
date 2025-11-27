@@ -5,6 +5,7 @@ import heapq
 import hashing
 import itertools # https://docs.python.org/3/library/itertools.html#itertools.count. using this python library to get a unique count
 import copy
+import logger
 
 '''
 Parameters:
