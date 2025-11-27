@@ -1,6 +1,7 @@
 from dataclasses import dataclass
 from typing import List
 
+
 # represents single cell in the shipping container grid
 @dataclass
 class Cell:
@@ -25,7 +26,7 @@ class PuzzleState:
       @classmethod
       def generate_state_from_manifest_data(cls, manifest_data: List[tuple[int, int, int, str]]) -> 'PuzzleState':
             state = cls.create_empty()
-
+            num_containers = 0
             for row, col, weight, desc in manifest_data:
                   if desc == "NAN":
                         state.grid[row][col] = Cell(exists = False, weight = 0, description=desc)
@@ -33,6 +34,8 @@ class PuzzleState:
                         state.grid[row][col] = Cell(exists = True, weight = 0, description=desc)
                   else:
                         state.grid[row][col] = Cell(exists = True, weight = weight, description=desc)
-
+                  
+                  if weight != 0:
+                        num_containers += 1
 
             return state
