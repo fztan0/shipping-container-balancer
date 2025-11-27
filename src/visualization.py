@@ -115,15 +115,15 @@ def visualize_steps(initial_state: PuzzleState, all_moves: List[List[tuple[int, 
             if start_x == 8 and start_y == 0:
                 source_locations = []
                 target_locations = [end_pos]
-                logger.log_message(f"[{prev_pos} was moved to [{updated_pos}]]")
+                logger.log_message(f"PARK was moved to {updated_pos}")
             # FINAL MOVE
             elif end_x == 8 and end_y == 0:
                 source_locations = [start_pos]
                 target_locations = []
-                logger.log_message(f"[{prev_pos} was moved to [{updated_pos}]]")
+                logger.log_message(f"{prev_pos} was moved to PARK")
             # NORMAL MOVE
             else:
-                logger.log_message(f"[{prev_pos} was moved to [{updated_pos}]]")
+                logger.log_message(f"{prev_pos} was moved to {updated_pos}")
                 container = state_tracker['curr_state'].grid[start_x][start_y]
                 source_locations = [start_pos]
                 target_locations = [end_pos]
