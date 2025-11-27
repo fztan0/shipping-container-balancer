@@ -4,6 +4,9 @@ import move_operators
 import search_nodes
 import hashing
 import visualization
+import time
+import logger
+import manifest_io
 
 def debug_print_formatted_loaded_manifest(state: puzzle_state):
       for r in range(1, 9): # rows 1–8
@@ -144,14 +147,28 @@ def debug_hashMap(state: puzzle_state):
       return
       
 def debug_ucsAlg(state: puzzle_state):
+      start = time.time()
       finalCost, finalPuzzleState, allMoves = search_algorithm.uniformCostSearch(state)
+      duration = time.time() - start
       print(f"Final Cost: {finalCost}")
       print(f"{(allMoves)}")
-      #visualization.visualize_state(finalPuzzleState)
+      logger.log_balance_sol(len(allMoves), duration)
       visualization.visualize_steps(state, allMoves)
+      return
+
+def debug_logger_example():
+      logger.initialize_logger()
+      file_path = manifest_io.get_file_name()
+      puzzle_state = manifest_io.load_ship_manifest(file_path)
+
+      debug_ucsAlg(puzzle_state)
       
 
+      # logger.log_move_operation(allMoves)
+      logger.log_finish_operation()
+      logger.log_kill()
+      logger.write_logger_to_desktop()
 
 
-
-
+if __name__ == "__main__":
+      debug_logger_example()

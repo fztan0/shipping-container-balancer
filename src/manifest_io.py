@@ -1,13 +1,17 @@
 import manifest_parser
 import puzzle_state
 
+MANIFEST_FILENAME = ""
+
 def get_file_name() -> str:
+      global MANIFEST_FILENAME
       input_file_name = input("Enter name of manifest: ")
 
       if not input_file_name:
             raise ValueError("No file name provided")
 
       # input data files are placed in ./data within repo root
+      MANIFEST_FILENAME = input_file_name
       input_file_name = "data/" + input_file_name
 
       return input_file_name
