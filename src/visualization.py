@@ -3,10 +3,7 @@ import matplotlib.patches as patches
 from typing import List, Optional
 from puzzle_state import PuzzleState, Cell
 import copy
-<<<<<<< HEAD
-=======
 import logger
->>>>>>> main
 
 def get_cell_color(cell: Cell, is_source: bool = False, is_target: bool = False) -> str:
     if is_source:
