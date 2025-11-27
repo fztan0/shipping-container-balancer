@@ -22,29 +22,24 @@ def log_message(message):
 def log_manifest_opened(num_containers):
   events.append(f"{timestamp()} Manifest {manifest_io.MANIFEST_FILENAME} is opened, there are {num_containers} on the ship.")
 
-# "Balance solution found, it will require 9 moves/34 minutes."
 def log_balance_sol(num_moves, duration):
-  events.append(f"{timestamp()} Balance solution found, it will require {num_moves}/{duration} minutes.")
-
-# e.g (01, 04) to (03, 03) // (01, 03) to (03, 04) // (04, 01) to (10, 02)
+  events.append(f"{timestamp()} Balance solution found, it will require {num_moves} moves/{duration} seconds.")
 
 def log_move_operation(list_moves):
-  for i in range(0, len(list_moves), 2):
-    prev = list_moves[i]
-    updated = list_moves[i+1]
-
+  for move in list_moves:
+    prev, updated = move
+    prev_new = (prev[0] + 1, prev[1] + 1)
+    updated_new = (updated[0] + 1, updated[1] + 1)
+  
     input_user = input("Select ENTER once move is done or 'M' to log a message")
 
     if input_user.strip() == "":
-      log_message(f"[{prev}] was moved to [{updated}]")
+      log_message(f"[{prev_new}] was moved to [{updated_new}]")
 
     if input_user == 'm':
       note = input("Enter note:")
       log_message(note)
-      log_message(f"[{prev}] was moved to [{updated}]")
-
-    
-  
+      log_message(f"[{prev_new}] was moved to [{updated_new}]")
 
 # "Finished a Cycle. Manifest HMMAlgecirasOUTBOUND.txt was written to desktop, and a
 # reminder pop-up to operator to send file was displayed"
@@ -56,7 +51,7 @@ def log_kill():
   log_message("Program was shut down.")
 
 def write_logger_to_desktop(): # add a parameter of name_of_port because not all ports will be by MrKeogh
-  filename = "KeoghsPort" + start_time.strftime("%m_%d_%Y_%H%M") + ".txt"
+  filename = "KeoghsPort" + "OUTBOUND" + start_time.strftime("%m_%d_%Y_%H%M") + ".txt"
   desktop_location = os.path.join(os.path.expanduser("~"), "Desktop", filename)
   
   with open(desktop_location, "w") as f:
