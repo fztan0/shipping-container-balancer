@@ -1,12 +1,9 @@
 import puzzle_state
 import search_algorithm
 import move_operators
-import manifest_io
-import logger
 import search_nodes
 import hashing
 import visualization
-import time
 
 def debug_print_formatted_loaded_manifest(state: puzzle_state):
       for r in range(1, 9): # rows 1–8
@@ -27,6 +24,7 @@ def debug_print_formatted_loaded_manifest(state: puzzle_state):
                   weight_field = f"{weight:05d}"
 
                   print(f"[{r:02d},{c:02d}], {{{weight_field}}}, {token}")
+
       return
 
 
@@ -79,7 +77,7 @@ def debug_getContainers(state: puzzle_state):
             for (x,y), _ in containers:
                   print((x,y))
       return
-      
+
 def debug_validContainers(state: puzzle_state):
       containers = move_operators.getAllContainers(state)
       if len(containers) == 0:
@@ -146,27 +144,14 @@ def debug_hashMap(state: puzzle_state):
       return
       
 def debug_ucsAlg(state: puzzle_state):
-      start = time.time()
       finalCost, finalPuzzleState, allMoves = search_algorithm.uniformCostSearch(state)
-      duration = time.time() - start
       print(f"Final Cost: {finalCost}")
       print(f"{(allMoves)}")
-      visualization.visualize_state(finalPuzzleState)
-      return len(allMoves), duration, allMoves
-
-def debug_logger_example():
-      logger.initialize_logger()
-      file_path = manifest_io.get_file_name()
-      puzzle_state = manifest_io.load_ship_manifest(file_path)
-
-      num_moves, duration, allMoves = debug_ucsAlg(puzzle_state)
-
-      logger.log_balance_sol(num_moves, duration)
-      logger.log_move_operation(allMoves)
-      logger.log_finish_operation()
-      logger.log_kill()
-      logger.write_logger_to_desktop()
+      #visualization.visualize_state(finalPuzzleState)
+      visualization.visualize_steps(state, allMoves)
+      
 
 
-if __name__ == "__main__":
-      debug_logger_example()
+
+
+
