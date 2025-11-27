@@ -3,6 +3,10 @@ import matplotlib.patches as patches
 from typing import List, Optional
 from puzzle_state import PuzzleState, Cell
 import copy
+<<<<<<< HEAD
+=======
+import logger
+>>>>>>> main
 
 def get_cell_color(cell: Cell, is_source: bool = False, is_target: bool = False) -> str:
     if is_source:
@@ -104,22 +108,25 @@ def visualize_steps(initial_state: PuzzleState, all_moves: List[List[tuple[int, 
                 visualize_state(state_tracker['curr_state'], "Final State (press q to quit)", fig=state_tracker['fig'], ax=state_tracker['ax'])
                 return
             
-            move = state_tracker['all_moves'][state_tracker['move_index']]
-            start_pos, end_pos = move
+            start_pos, end_pos = state_tracker['all_moves'][state_tracker['move_index']]
             start_x, start_y = start_pos
             end_x, end_y = end_pos
-            move_number = state_tracker['move_index'] + 1 # for logging
+            prev_pos = (start_x + 1, start_y + 1)
+            updated_pos = (end_x + 1, end_y + 1)
 
             # INITIAL MOVE
             if start_x == 8 and start_y == 0:
                 source_locations = []
                 target_locations = [end_pos]
+                logger.log_message(f"[{prev_pos} was moved to [{updated_pos}]]")
             # FINAL MOVE
             elif end_x == 8 and end_y == 0:
                 source_locations = [start_pos]
                 target_locations = []
+                logger.log_message(f"[{prev_pos} was moved to [{updated_pos}]]")
             # NORMAL MOVE
             else:
+                logger.log_message(f"[{prev_pos} was moved to [{updated_pos}]]")
                 container = state_tracker['curr_state'].grid[start_x][start_y]
                 source_locations = [start_pos]
                 target_locations = [end_pos]
@@ -128,7 +135,7 @@ def visualize_steps(initial_state: PuzzleState, all_moves: List[List[tuple[int, 
                
                 # Clear prev position
                 state_tracker['curr_state'].grid[start_x][start_y] = Cell(exists=True, weight=0, description="UNUSED")
-            visualize_state(state_tracker['curr_state'], "*LOGGING PORTION*", source_locations, target_locations, fig = state_tracker['fig'], ax=state_tracker['ax'])
+            visualize_state(state_tracker['curr_state'], "", source_locations, target_locations, fig = state_tracker['fig'], ax=state_tracker['ax'])
                 
 
     plt.ion()
@@ -139,5 +146,3 @@ def visualize_steps(initial_state: PuzzleState, all_moves: List[List[tuple[int, 
     visualize_state(curr_state, "Initial State - ENTER to continue", fig = fig, ax = ax)
     plt.show(block=True)
     plt.ioff()
-
-                

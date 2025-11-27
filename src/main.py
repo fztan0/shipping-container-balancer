@@ -1,9 +1,12 @@
 import debug
 import manifest_io
 import visualization
+import logger
 
 def main():
       # example receive
+      logger.initialize_logger()
+
       puzzle = manifest_io.load_manifest_from_user()
 
       debug.debug_print_formatted_loaded_manifest(puzzle)
@@ -16,7 +19,14 @@ def main():
       #debug.debug_testCraneCost(puzzle)
       # debug.debug_updateState(puzzle)
       #debug.debug_bfs(puzzle)
+      # debug.debug_ucsAlg(puzzle)
+
       debug.debug_ucsAlg(puzzle)
+
+
+      logger.log_finish_operation()
+      logger.log_kill()
+      logger.write_logger_to_desktop()
 
 
 
