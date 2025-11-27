@@ -1,5 +1,6 @@
 from dataclasses import dataclass
 from typing import List
+import logger
 
 
 # represents single cell in the shipping container grid
@@ -37,5 +38,5 @@ class PuzzleState:
                   
                   if weight != 0:
                         num_containers += 1
-
+            logger.log_manifest_opened(num_containers)
             return state

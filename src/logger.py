@@ -1,7 +1,6 @@
 import datetime
 import manifest_io
 import os
-import visualization
 
 events = []
 start_time = None
@@ -29,14 +28,17 @@ def log_balance_sol(num_moves, duration):
 # "Finished a Cycle. Manifest HMMAlgecirasOUTBOUND.txt was written to desktop, and a
 # reminder pop-up to operator to send file was displayed"
 def log_finish_operation():
-  events.append(f"{timestamp()} Finished a Cycle. Manifest {manifest_io.MANIFEST_FILENAME} was written to desktop, and a reminder pop-up to operator to send file was displayed.")
+  new_output = os.path.splitext(manifest_io.MANIFEST_FILENAME)[0]
+  events.append(f"{timestamp()} Finished a Cycle. Manifest {new_output}OUTBOUND.txt was written to desktop, and a reminder pop-up to operator to send file was displayed.")
 
 # at the very end of the program / day
 def log_kill():
   log_message("Program was shut down.")
 
 def write_logger_to_desktop(): # add a parameter of name_of_port because not all ports will be by MrKeogh
-  filename = "KeoghsPort" + "OUTBOUND" + start_time.strftime("%m_%d_%Y_%H%M") + ".txt"
+  new_output = os.path.splitext(manifest_io.MANIFEST_FILENAME)[0]
+
+  filename = new_output + "OUTBOUND" + start_time.strftime("%m_%d_%Y_%H%M") + ".txt"
   desktop_location = os.path.join(os.path.expanduser("~"), "Desktop", filename)
   
   with open(desktop_location, "w") as f:
