@@ -17,7 +17,6 @@ def main():
       # debug.debug_updateState(puzzle)
       #debug.debug_bfs(puzzle)
       debug.debug_ucsAlg(puzzle)
-      visualization.visualize_state(puzzle)
 
 
 

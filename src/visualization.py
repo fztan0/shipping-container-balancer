@@ -2,6 +2,7 @@ import matplotlib.pyplot as plt
 import matplotlib.patches as patches
 from typing import List, Optional
 from puzzle_state import PuzzleState, Cell
+import copy
 
 def get_cell_color(cell: Cell, is_source: bool = False, is_target: bool = False) -> str:
     if is_source:
@@ -16,8 +17,12 @@ def get_cell_color(cell: Cell, is_source: bool = False, is_target: bool = False)
     else:
         return "#d2b48c"
         
-def visualize_state(state: PuzzleState, message: Optional[str] = None, source_location: Optional[List[tuple[int, int]]] = None, target_location: Optional[List[tuple[int, int]]] = None):
-    fig, ax = plt.subplots(figsize = (16,10))
+def visualize_state(state: PuzzleState, message: Optional[str] = None, source_location: Optional[List[tuple[int, int]]] = None, target_location: Optional[List[tuple[int, int]]] = None, fig = None, ax = None):
+    if fig is None or ax is None:
+        plt.ion()
+        fig, ax = plt.subplots(figsize = (16,10))
+    else:
+        ax.clear()
     rows = len(state.grid)
     cols = len(state.grid[0])
 
@@ -25,10 +30,17 @@ def visualize_state(state: PuzzleState, message: Optional[str] = None, source_lo
     ax.set_ylim(0, rows)
     ax.set_aspect('equal')
 
+    source_set = set(source_location) if source_location else set()
+    target_set = set(target_location) if target_location else set()
+
     for row in range(rows):
         for col in range(cols):
             cell = state.grid[row][col]
             color = get_cell_color(cell)
+
+            is_source = (row, col) in source_set
+            is_target = (row, col) in target_set
+            color = get_cell_color(cell, is_source, is_target)
 
             rect = patches.Rectangle((col,row), 1, 1, linewidth = 1.5, edgecolor = 'black', facecolor = color)
             ax.add_patch(rect)
@@ -64,6 +76,68 @@ def visualize_state(state: PuzzleState, message: Optional[str] = None, source_lo
 
     plt.tight_layout()
     plt.grid(False)
-    plt.show()
+    plt.draw()
+    plt.pause(0.001)
+    return fig, ax
 
-# TODO: function showing each state/move via every enter pressed
+def visualize_steps(initial_state: PuzzleState, all_moves: List[List[tuple[int, int]]]):
+    curr_state = copy.deepcopy(initial_state)
+    state_tracker = {
+        'move_index': -1,
+        'all_moves': all_moves,
+        'curr_state': curr_state,
+        'fig': None,
+        'ax': None,
+        'finished': False
+    }
+
+    def on_key_press(event):
+        if event.key == 'q':
+            plt.close('all')
+            state_tracker['finished'] = True
+            return
+        if event.key == 'enter' or event.key == ' ':
+            state_tracker['move_index'] += 1
+
+            # Last state
+            if state_tracker['move_index'] >= len(state_tracker['all_moves']):
+                visualize_state(state_tracker['curr_state'], "Final State (press q to quit)", fig=state_tracker['fig'], ax=state_tracker['ax'])
+                return
+            
+            move = state_tracker['all_moves'][state_tracker['move_index']]
+            start_pos, end_pos = move
+            start_x, start_y = start_pos
+            end_x, end_y = end_pos
+            move_number = state_tracker['move_index'] + 1 # for logging
+
+            # INITIAL MOVE
+            if start_x == 8 and start_y == 0:
+                source_locations = []
+                target_locations = [end_pos]
+            # FINAL MOVE
+            elif end_x == 8 and end_y == 0:
+                source_locations = [start_pos]
+                target_locations = []
+            # NORMAL MOVE
+            else:
+                container = state_tracker['curr_state'].grid[start_x][start_y]
+                source_locations = [start_pos]
+                target_locations = [end_pos]
+
+                state_tracker['curr_state'].grid[end_x][end_y] = Cell(exists=True, weight=container.weight, description=container.description)
+               
+                # Clear prev position
+                state_tracker['curr_state'].grid[start_x][start_y] = Cell(exists=True, weight=0, description="UNUSED")
+            visualize_state(state_tracker['curr_state'], "*LOGGING PORTION*", source_locations, target_locations, fig = state_tracker['fig'], ax=state_tracker['ax'])
+                
+
+    plt.ion()
+    fig, ax = plt.subplots(figsize = (16,10))
+    state_tracker['fig'] = fig
+    state_tracker['ax'] = ax
+    fig.canvas.mpl_connect('key_press_event', on_key_press)
+    visualize_state(curr_state, "Initial State - ENTER to continue", fig = fig, ax = ax)
+    plt.show(block=True)
+    plt.ioff()
+
+                

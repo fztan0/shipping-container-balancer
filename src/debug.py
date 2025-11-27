@@ -147,7 +147,9 @@ def debug_ucsAlg(state: puzzle_state):
       finalCost, finalPuzzleState, allMoves = search_algorithm.uniformCostSearch(state)
       print(f"Final Cost: {finalCost}")
       print(f"{(allMoves)}")
-      visualization.visualize_state(finalPuzzleState)
+      #visualization.visualize_state(finalPuzzleState)
+      visualization.visualize_steps(state, allMoves)
+      
 
 
 
