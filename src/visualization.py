@@ -4,6 +4,7 @@ from typing import List, Optional
 from puzzle_state import PuzzleState, Cell
 import copy
 import logger
+from matplotlib.widgets import TextBox
 
 def get_cell_color(cell: Cell, is_source: bool = False, is_target: bool = False) -> str:
     if is_source:
@@ -55,7 +56,6 @@ def visualize_state(state: PuzzleState, message: Optional[str] = None, source_lo
                 # unused
                 ax.text(col + 0.5, y_pos, 'UNUSED', ha='center', va='center', fontsize = 9, fontweight = 'bold', color = '#666666')
                 ax.text(col + 0.5, y_pos - 0.2, f'{cell.weight}', ha='center', va = 'center', fontsize = 8, color = 'black')
-                # Note: will expand for source and target cells
             else:
                 # containers
                 desc = cell.description[:8] + "..." if len(cell.description) > 8 else cell.description
@@ -89,20 +89,51 @@ def visualize_steps(initial_state: PuzzleState, all_moves: List[List[tuple[int, 
         'curr_state': curr_state,
         'fig': None,
         'ax': None,
-        'finished': False
+        'finished': False,
+        'text_box': None,
+        'text_box_ax': None,
+        'input_mode': False
     }
+    def on_text_submit(text):
+        if text.strip():
+            logger.log_message(text.strip())
+            print(f"Logged: {text.strip()}")
+        hide_text_input()
+
+    def show_text_input():
+        state_tracker['text_box_ax'] = state_tracker['fig'].add_axes([0.3, 0.02, 0.4, 0.04])
+        state_tracker['text_box'] = TextBox(state_tracker['text_box_ax'], 'Log Entry:', initial ='')
+        state_tracker['text_box'].on_submit(on_text_submit)
+        state_tracker['input_mode'] = True
+        state_tracker['fig'].canvas.draw()
+
+    def hide_text_input():
+        if state_tracker['text_box_ax'] is not None:
+            state_tracker['text_box_ax'].remove()
+            state_tracker['text_box_ax'] = None
+            state_tracker['text_box'] = None
+            state_tracker['input_mode'] = False
+            state_tracker['fig'].canvas.draw()
 
     def on_key_press(event):
+        if state_tracker['input_mode']:
+            return
+        
         if event.key == 'q':
             plt.close('all')
             state_tracker['finished'] = True
             return
+        
+        if event.key == 'p':
+            show_text_input()
+            return
+
         if event.key == 'enter' or event.key == ' ':
             state_tracker['move_index'] += 1
 
             # Last state
             if state_tracker['move_index'] >= len(state_tracker['all_moves']):
-                visualize_state(state_tracker['curr_state'], "Final State (press q to quit)", fig=state_tracker['fig'], ax=state_tracker['ax'])
+                visualize_state(state_tracker['curr_state'], "Final State (press q to quit, p to log)", fig=state_tracker['fig'], ax=state_tracker['ax'])
                 return
             
             start_pos, end_pos = state_tracker['all_moves'][state_tracker['move_index']]
@@ -132,7 +163,7 @@ def visualize_steps(initial_state: PuzzleState, all_moves: List[List[tuple[int, 
                
                 # Clear prev position
                 state_tracker['curr_state'].grid[start_x][start_y] = Cell(exists=True, weight=0, description="UNUSED")
-            visualize_state(state_tracker['curr_state'], "", source_locations, target_locations, fig = state_tracker['fig'], ax=state_tracker['ax'])
+            visualize_state(state_tracker['curr_state'], "Press ENTER to continue, 'p' to log, 'q' to quit", source_locations, target_locations, fig = state_tracker['fig'], ax=state_tracker['ax'])
                 
 
     plt.ion()
@@ -140,6 +171,7 @@ def visualize_steps(initial_state: PuzzleState, all_moves: List[List[tuple[int, 
     state_tracker['fig'] = fig
     state_tracker['ax'] = ax
     fig.canvas.mpl_connect('key_press_event', on_key_press)
-    visualize_state(curr_state, "Initial State - ENTER to continue", fig = fig, ax = ax)
+    visualize_state(curr_state, "Initial State - ENTER to continue, 'p' to log, 'q' to quit", fig = fig, ax = ax)
     plt.show(block=True)
     plt.ioff()
+
