@@ -4,7 +4,9 @@ from typing import List, Optional
 from puzzle_state import PuzzleState, Cell
 import copy
 import logger
-from matplotlib.widgets import TextBox
+from matplotlib.widgets import TextBox, Button
+import manifest_io
+import search_algorithm
 
 def get_cell_color(cell: Cell, is_source: bool = False, is_target: bool = False) -> str:
     if is_source:
@@ -81,7 +83,7 @@ def visualize_state(state: PuzzleState, message: Optional[str] = None, source_lo
     plt.pause(0.001)
     return fig, ax
 
-def visualize_steps(initial_state: PuzzleState, all_moves: List[List[tuple[int, int]]]):
+def visualize_steps(initial_state: PuzzleState, all_moves: List[List[tuple[int, int]]], on_complete_callback = None):
     curr_state = copy.deepcopy(initial_state)
     state_tracker = {
         'move_index': -1,
@@ -89,15 +91,15 @@ def visualize_steps(initial_state: PuzzleState, all_moves: List[List[tuple[int, 
         'curr_state': curr_state,
         'fig': None,
         'ax': None,
-        'finished': False,
         'text_box': None,
         'text_box_ax': None,
-        'input_mode': False
+        'input_mode': False,
+        'initial_state': initial_state,
+        'on_complete': on_complete_callback,
     }
     def on_text_submit(text):
         if text.strip():
             logger.log_message(text.strip())
-            print(f"Logged: {text.strip()}")
         hide_text_input()
 
     def show_text_input():
@@ -117,11 +119,17 @@ def visualize_steps(initial_state: PuzzleState, all_moves: List[List[tuple[int, 
 
     def on_key_press(event):
         if state_tracker['input_mode']:
+            if event.key == 'escape':
+                hide_text_input()
             return
         
-        if event.key == 'q':
-            plt.close('all')
-            state_tracker['finished'] = True
+        if event.key == 'r':
+            hide_text_input()
+            logger.log_finish_operation()
+            logger.write_logger_to_desktop()
+            state_tracker['fig'].canvas.mpl_disconnect(state_tracker.get('key_handler_id'))
+            if state_tracker['on_complete']:
+                state_tracker['on_complete']()
             return
         
         if event.key == 'p':
@@ -133,7 +141,7 @@ def visualize_steps(initial_state: PuzzleState, all_moves: List[List[tuple[int, 
 
             # Last state
             if state_tracker['move_index'] >= len(state_tracker['all_moves']):
-                visualize_state(state_tracker['curr_state'], "Final State (press q to quit, p to log)", fig=state_tracker['fig'], ax=state_tracker['ax'])
+                visualize_state(state_tracker['curr_state'], "Final State (press q to quit, p to log, r to load new manifest)", fig=state_tracker['fig'], ax=state_tracker['ax'])
                 return
             
             start_pos, end_pos = state_tracker['all_moves'][state_tracker['move_index']]
@@ -168,12 +176,105 @@ def visualize_steps(initial_state: PuzzleState, all_moves: List[List[tuple[int, 
             visualize_state(state_tracker['curr_state'], "Press ENTER to continue, 'p' to log, 'q' to quit", source_locations, target_locations, fig = state_tracker['fig'], ax=state_tracker['ax'])
                 
 
-    plt.ion()
-    fig, ax = plt.subplots(figsize = (16,10))
+    fig = plt.gcf()
+    ax = plt.gca()
     state_tracker['fig'] = fig
     state_tracker['ax'] = ax
+    
+    state_tracker['key_handler_id'] = fig.canvas.mpl_connect('key_press_event', on_key_press)
     fig.canvas.mpl_connect('key_press_event', on_key_press)
     visualize_state(curr_state, "Initial State - ENTER to continue, 'p' to log, 'q' to quit", fig = fig, ax = ax)
-    plt.show(block=True)
-    plt.ioff()
+    fig.canvas.draw()
+    
+def run_interface():
+    state_tracker = {
+        'curr_state': None,
+        'fig': None,
+        'ax': None,
+        'text_box': None,
+        'text_box_ax': None,
+        'input_mode': True,
+        'load_button': None,
+        'load_button_ax': None,
+    }
+    
+    def on_manifest_submit(filename):
+        if not filename.strip():
+            print("No filename provided")
+            return
+        try:
+            file_path = "data/" + filename.strip()
+            manifest_io.MANIFEST_FILENAME = filename.strip()
 
+            # Reset logger for new manifest
+            logger.events = []
+            logger.start_time = None
+            logger.initialize_logger()
+            
+            puzzle = manifest_io.load_ship_manifest(file_path)
+
+            # Run algorithm here
+            finalCost, finalPuzzleState, allMoves = search_algorithm.uniformCostSearch(puzzle)
+            duration = finalCost / 60.0
+            logger.log_balance_sol(len(allMoves), duration)
+
+            hide_input_ui()
+            visualize_steps(puzzle, allMoves, on_complete_callback=show_input_ui)
+
+        except FileNotFoundError:
+            print(f"Error: File '{filename}' not found in data/ directory")
+        except Exception as e:
+            print(f"Error loading manifest: {e}")
+
+    def show_input_ui():
+        state_tracker['input_mode'] = True
+        if state_tracker['fig'] is None:
+            plt.ion()
+            state_tracker['fig'], state_tracker['ax'] = plt.subplots(figsize = (16,10))
+            state_tracker['fig'].canvas.mpl_connect('close_event', on_close)
+        
+        # Clean slate
+        state_tracker['fig'].clear()
+        state_tracker['ax'] = state_tracker['fig'].add_subplot(111)
+        state_tracker['ax'].set_xlim(0,12)
+        state_tracker['ax'].set_ylim(0,8)
+        state_tracker['ax'].axis('off')
+
+        # Menu title
+        state_tracker['ax'].text(6,6, 'Load Balancing System', ha='center', va='center', fontsize=25, fontweight = 'bold')
+        state_tracker['ax'].text(6,5, 'Please enter manifest to load', ha='center', va='center', fontsize=14)
+
+        # Menu input
+        state_tracker['text_box_ax'] = state_tracker['fig'].add_axes([0.3, 0.45, 0.4, 0.05])
+        state_tracker['text_box'] = TextBox(state_tracker['text_box_ax'], 'Manifest:', initial='')
+        state_tracker['text_box'].on_submit(on_manifest_submit)
+
+        # Menu buttons
+        state_tracker['load_button_ax'] = state_tracker['fig'].add_axes([0.45, 0.35, 0.1, 0.05])
+        state_tracker['load_button'] = Button(state_tracker['load_button_ax'], 'Load')
+        state_tracker['load_button'].on_clicked(lambda event: on_manifest_submit(state_tracker['text_box'].text))
+        
+        state_tracker['fig'].canvas.draw()
+    
+    def hide_input_ui():
+        if state_tracker['text_box_ax'] is not None:
+            state_tracker['text_box_ax'].remove()
+            state_tracker['text_box_ax'] = None
+            state_tracker['text_box'] = None
+        
+        if state_tracker['load_button_ax'] is not None:
+            state_tracker['load_button_ax'].remove()
+            state_tracker['load_button_ax'] = None
+            state_tracker['load_button'] = None
+        state_tracker['input_mode'] = False
+    
+    def on_close(event):
+        logger.log_finish_operation()
+        logger.log_kill()
+        logger.write_logger_to_desktop()
+        plt.close('all')
+    
+    show_input_ui()
+    plt.show(block = True)
+    plt.ioff()
+            
