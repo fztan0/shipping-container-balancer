@@ -107,8 +107,8 @@ def aStarSearch(startingState: puzzle_state.PuzzleState) -> 'Path & Cost':
     key = hashing.createKey(startingState)
     hashMap[key] = True
     #create crane position to calculate cost from crane to starting state
-    cranePosition = [(8,0), puzzle_state.Cell(exists=True, weight=0, description="UNUSED")]
-    #start at cranePosition. leave destination as (0,0) for now
+    cranePosition = [(8,0), puzzle_state.Cell(exists=True, weight=0, description="UNUSED")]  # Crane at row 9, column 1 (1-indexed)
+    # Start at cranePosition. leave destination as (0,0) for now
     move = [cranePosition[0], (0,0)]
     listofMoves = []
     listofMoves.append(move)
@@ -131,7 +131,7 @@ def aStarSearch(startingState: puzzle_state.PuzzleState) -> 'Path & Cost':
             final_path_cost = currentPathCost + cost
             print(f"Final path cost: {final_path_cost} (path cost: {currentPathCost}, crane return: {cost})")
             #add the move from last cotaniner back to crane position
-            movesContainer.append([(endX,endY), (8,0)])
+            movesContainer.append([(endX,endY), (8,0)])  # Return crane to row 9, column 1 (1-indexed)
             return final_path_cost, currentState, movesContainer
         #gets all the containers in the state
         containers = move_operators.getAllContainers(currentState)
