@@ -21,7 +21,7 @@ def get_cell_color(cell: Cell, is_source: bool = False, is_target: bool = False)
     else:
         return "#d2b48c"
         
-def visualize_state(state: PuzzleState, message: Optional[str] = None, source_location: Optional[List[tuple[int, int]]] = None, target_location: Optional[List[tuple[int, int]]] = None, fig = None, ax = None):
+def visualize_state(state: PuzzleState, message: Optional[str] = None, source_location: Optional[List[tuple[int, int]]] = None, target_location: Optional[List[tuple[int, int]]] = None, fig = None, ax = None, logger_message: Optional[str] = None):
     if fig is None or ax is None:
         plt.ion()
         fig, ax = plt.subplots(figsize = (16,10))
@@ -72,6 +72,8 @@ def visualize_state(state: PuzzleState, message: Optional[str] = None, source_lo
     title = 'Shipping Container Grid'
     if message:
         title += f'\n{message}'
+    if logger_message:
+        title += f'\n{logger_message}'
     ax.set_title(title, fontsize = 14, fontweight = 'bold', pad = 20)
 
     plt.tight_layout()
@@ -93,6 +95,7 @@ def visualize_steps(initial_state: PuzzleState, all_moves: List[List[tuple[int, 
         'input_mode': False,
         'initial_state': initial_state,
         'on_complete': on_complete_callback,
+        'current_logger_message': None,
     }
     def on_text_submit(text):
         if text.strip():
@@ -138,7 +141,7 @@ def visualize_steps(initial_state: PuzzleState, all_moves: List[List[tuple[int, 
 
             # Last state
             if state_tracker['move_index'] >= len(state_tracker['all_moves']):
-                visualize_state(state_tracker['curr_state'], "Final State (press q to quit, p to log, r to load new manifest)", fig=state_tracker['fig'], ax=state_tracker['ax'])
+                visualize_state(state_tracker['curr_state'], "Final State (press q to quit, p to log, r to load new manifest)", fig=state_tracker['fig'], ax=state_tracker['ax'], logger_message=state_tracker['current_logger_message'])
                 return
             
             start_pos, end_pos = state_tracker['all_moves'][state_tracker['move_index']]
@@ -153,15 +156,21 @@ def visualize_steps(initial_state: PuzzleState, all_moves: List[List[tuple[int, 
             if start_x == 8 and start_y == 0:
                 source_locations = []
                 target_locations = [end_pos]
-                logger.log_message(f"PARK was moved to {strUpdated_pos}")
+                move_message = f"PARK was moved to {strUpdated_pos}"
+                logger.log_message(move_message)
+                state_tracker['current_logger_message'] = move_message
             # FINAL MOVE
             elif end_x == 8 and end_y == 0:
                 source_locations = [start_pos]
                 target_locations = []
-                logger.log_message(f"{strPrev_pos} was moved to PARK")
+                move_message = f"{strPrev_pos} was moved to PARK"
+                logger.log_message(move_message)
+                state_tracker['current_logger_message'] = move_message
             # NORMAL MOVE
             else:
-                logger.log_message(f"{strPrev_pos} was moved to {strUpdated_pos}")
+                move_message = f"{strPrev_pos} was moved to {strUpdated_pos}"
+                logger.log_message(move_message)
+                state_tracker['current_logger_message'] = move_message
                 container = state_tracker['curr_state'].grid[start_x][start_y]
                 source_locations = [start_pos]
                 target_locations = [end_pos]
@@ -170,7 +179,7 @@ def visualize_steps(initial_state: PuzzleState, all_moves: List[List[tuple[int, 
                
                 # Clear prev position
                 state_tracker['curr_state'].grid[start_x][start_y] = Cell(exists=True, weight=0, description="UNUSED")
-            visualize_state(state_tracker['curr_state'], "Press ENTER to continue, 'p' to log, 'q' to quit", source_locations, target_locations, fig = state_tracker['fig'], ax=state_tracker['ax'])
+            visualize_state(state_tracker['curr_state'], "Press ENTER to continue, 'p' to log, 'q' to quit", source_locations, target_locations, fig = state_tracker['fig'], ax=state_tracker['ax'], logger_message=state_tracker['current_logger_message'])
                 
 
     fig = plt.gcf()
