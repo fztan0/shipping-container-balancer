@@ -69,7 +69,7 @@ def visualize_state(state: PuzzleState, message: Optional[str] = None, source_lo
     ax.set_yticklabels(range(1, rows + 1))
     ax.set_ylabel('Row', fontsize = 12, fontweight = 'bold')
 
-    title = 'Shipping Container Grid'
+    title = 'Manifest Visualizer'
     if message:
         title += f'\n{message}'
     ax.set_title(title, fontsize = 14, fontweight = 'bold', pad = 30)
@@ -83,7 +83,7 @@ def visualize_state(state: PuzzleState, message: Optional[str] = None, source_lo
     plt.pause(0.001)
     return fig, ax
 
-def visualize_steps(initial_state: PuzzleState, all_moves: List[List[tuple[int, int]]], on_complete_callback = None):
+def visualize_steps(initial_state: PuzzleState, all_moves: List[List[tuple[int, int]]], on_complete_callback = None, num_moves: int = 0, duration: float = 0.0):
     curr_state = copy.deepcopy(initial_state)
     state_tracker = {
         'move_index': -1,
@@ -97,6 +97,7 @@ def visualize_steps(initial_state: PuzzleState, all_moves: List[List[tuple[int, 
         'initial_state': initial_state,
         'on_complete': on_complete_callback,
         'current_logger_message': None,
+        'solution_message': f"Balance solution found, it will require {num_moves} moves/{duration:.2f} seconds.",
     }
     def on_text_submit(text):
         if text.strip():
@@ -142,7 +143,7 @@ def visualize_steps(initial_state: PuzzleState, all_moves: List[List[tuple[int, 
 
             # Last state
             if state_tracker['move_index'] >= len(state_tracker['all_moves']):
-                visualize_state(state_tracker['curr_state'], "Final State (press q to quit, p to log, r to load new manifest)", fig=state_tracker['fig'], ax=state_tracker['ax'], logger_message=state_tracker['current_logger_message'])
+                visualize_state(state_tracker['curr_state'], "Updated Manifest - 'q' to quit, 'p' to log, 'r' to load new manifest", fig=state_tracker['fig'], ax=state_tracker['ax'], logger_message=state_tracker['current_logger_message'])
                 return
             
             start_pos, end_pos = state_tracker['all_moves'][state_tracker['move_index']]
@@ -190,7 +191,7 @@ def visualize_steps(initial_state: PuzzleState, all_moves: List[List[tuple[int, 
     
     state_tracker['key_handler_id'] = fig.canvas.mpl_connect('key_press_event', on_key_press)
     fig.canvas.mpl_connect('key_press_event', on_key_press)
-    visualize_state(curr_state, "Initial State - ENTER to continue, 'p' to log, 'q' to quit", fig = fig, ax = ax)
+    visualize_state(curr_state, "Initial Manifest - ENTER to continue, 'p' to log, 'q' to quit", fig = fig, ax = ax, logger_message=state_tracker['solution_message'])
     fig.canvas.draw()
     
 def run_interface():
@@ -226,7 +227,7 @@ def run_interface():
             logger.log_balance_sol(len(allMoves), duration)
 
             hide_input_ui()
-            visualize_steps(puzzle, allMoves, on_complete_callback=show_input_ui)
+            visualize_steps(puzzle, allMoves, on_complete_callback=show_input_ui, num_moves=len(allMoves), duration=duration)
 
         except FileNotFoundError:
             print(f"Error: File '{filename}' not found in data/ directory")
