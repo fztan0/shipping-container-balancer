@@ -90,7 +90,7 @@ def debug_validContainers(state: puzzle_state):
       else:
             print(f"Original Containers: {len(containers)}")
             for (x,y), _ in containers:
-                  
+
                   print(f"({x+1},{y+1})")
 
       validContainers = move_operators.validContainers(state, containers)
@@ -146,10 +146,10 @@ def debug_hashMap(state: puzzle_state):
       else:
             print("duplicate")
       return
-      
+
 def debug_ucsAlg(state: puzzle_state):
       start = time.time()
-      finalCost, finalPuzzleState, allMoves = search_algorithm.uniformCostSearch(state)
+      finalCost, finalPuzzleState, allMoves = search_algorithm.aStarSearch(state)
       duration = time.time() - start
       ceiling_duration = math.ceil(duration)
       print(f"Final Cost: {finalCost}")
@@ -164,7 +164,7 @@ def debug_logger_example():
       puzzle_state = manifest_io.load_ship_manifest(file_path)
 
       debug_ucsAlg(puzzle_state)
-      
+
       # logger.log_move_operation(allMoves)
       logger.log_finish_operation()
       logger.log_kill()

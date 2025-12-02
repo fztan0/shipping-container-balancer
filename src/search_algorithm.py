@@ -5,10 +5,11 @@ import heapq
 import hashing
 import itertools # https://docs.python.org/3/library/itertools.html#itertools.count. using this python library to get a unique count
 import copy
+import heuristics
 
 '''
 Parameters:
-state : the puzzle state 
+state : the puzzle state
 p0 : original weight of the port side
 s0: original weight of the starboard side
 
@@ -28,7 +29,7 @@ def isGoalState(state: puzzle_state.PuzzleState, p0: int, s0:int) -> bool:
         return False
 
 #Returns [Pr, Sr]. Pr represents sum of the all the weights on the port side
-#Sr represents sum of all the weights in the starboard side 
+#Sr represents sum of all the weights in the starboard side
 def getCurrentWeight(state: puzzle_state.PuzzleState) -> tuple[int,int]:
     grid = state.grid
     total_p_weight = 0
@@ -49,7 +50,7 @@ Two borderline cases for goal state check (based on inital manifest):
     2. if there is just only one container in either the port side or starboard side return true
     3. If there are no containers at all
     4. If there are containers but all have 0 weights except for 1 container
-everything else return false 
+everything else return false
 '''
 def valid_edgecase_initialContainers(state: puzzle_state.PuzzleState) -> bool:
     grid = state.grid
@@ -89,15 +90,15 @@ Perform uniform cost search to determine proper ordering of containers
 
 Will have a priority queue containing (cost, puzzlestate, list of moves)
 
-Parameter: 
+Parameter:
     - startingState: gets the current puzzle state from the manifest
 Return:
     coordinate = tuple[int , int]
     move = tuple[coordinate , coordinate]
-    pathAndCost = tuple[int, finalPuzzleState, list[move]] 
+    pathAndCost = tuple[int, finalPuzzleState, list[move]]
 
 '''
-def uniformCostSearch(startingState: puzzle_state.PuzzleState) -> 'Path & Cost':
+def aStarSearch(startingState: puzzle_state.PuzzleState) -> 'Path & Cost':
     uniqueId = itertools.count() #iterator
     #if starting state is the goal return an empty list. No moves required
     if valid_edgecase_initialContainers(startingState) == True:
@@ -130,7 +131,7 @@ def uniformCostSearch(startingState: puzzle_state.PuzzleState) -> 'Path & Cost':
             currentCost = currentCost + cost
             #add the move from last cotaniner back to crane position
             movesContainer.append([(endX,endY), (8,0)])
-            return currentCost, currentState, movesContainer 
+            return currentCost, currentState, movesContainer
         #gets all the containers in the state
         containers = move_operators.getAllContainers(currentState)
         #filters and only get valid containers
@@ -154,11 +155,13 @@ def uniformCostSearch(startingState: puzzle_state.PuzzleState) -> 'Path & Cost':
                             childCost = currentCost + cost + craneCost
                             childMoves.append([(startX, startY), (endX, endY)])
                             #next (iter) increments by 1 resulting in a uniqueId each time
-                            heapq.heappush(priority_queue, (childCost, next(uniqueId), updateState, childMoves))
+                            heuristic_value = heuristics.manhattan_distance_heuristic(updateState)
+                            total_cost = childCost + heuristic_value
+                            heapq.heappush(priority_queue, (total_cost, next(uniqueId), updateState, childMoves))
                             hashMap[key] = True #update hashMap
         #already accounted for the crane so set it to false
         startAtCrane = False
-    return
+    return (0, startingState, [])  # Return default values when no solution found
 
 
 # if startAtCrane: #need to intially add the cost going from the cranePosition to firstContainer as well as updating the current move
@@ -197,12 +200,12 @@ def uniformCostSearch(startingState: puzzle_state.PuzzleState) -> 'Path & Cost':
 #             lastContainerCoord = currentMoves[numMoves - 1] #get the coordinate of the last container
 #             endX,endY = lastContainerCoord[1] #destination of the lastContainer
 #             finalContainerCell = currentState.grid[endX][endY]
-#             lastContainer = [(endX,endY), finalContainerCell] 
+#             lastContainer = [(endX,endY), finalContainerCell]
 #             cost = search_nodes.bfs(currentState, lastContainer, cranePosition) #get the cost from going from last container to cranePosition
 #             currentCost = currentCost + cost
 #             #add the move from last cotaniner back to crane position
 #             currentMoves.append([(endX,endY), (0,8)])
-#             return currentCost, currentState, currentMoves 
+#             return currentCost, currentState, currentMoves
 #         #gets all the containers in the state
 #         containers = move_operators.getAllContainers(currentState)
 #         #filters and only get valid containers
