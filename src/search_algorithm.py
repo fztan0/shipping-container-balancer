@@ -116,9 +116,9 @@ def aStarSearch(startingState: puzzle_state.PuzzleState) -> 'Path & Cost':
     startAtCrane = True
     #initalize a minheap and keep track of cost, uniqueId, puzzle state, list of moves
     #create a uniqueId to account as choice factor when two states have the same cost
-    heapq.heappush(priority_queue, (0, next(uniqueId), startingState, listofMoves))
+    heapq.heappush(priority_queue, (0, next(uniqueId), startingState, listofMoves, 0))  # (total_cost, id, state, moves, path_cost)
     while priority_queue:
-        currentCost, _, currentState, currentMoves =  heapq.heappop(priority_queue)
+        total_cost, _, currentState, currentMoves, currentPathCost =  heapq.heappop(priority_queue)
         movesContainer = copy.deepcopy(currentMoves)
         ph,sh = getCurrentWeight(currentState)
         if isGoalState(currentState, ph, sh):
@@ -128,10 +128,11 @@ def aStarSearch(startingState: puzzle_state.PuzzleState) -> 'Path & Cost':
             finalContainerCell = currentState.grid[endX][endY]
             lastContainer = [(endX,endY), finalContainerCell]
             cost = search_nodes.bfs(currentState, lastContainer, cranePosition) #get the cost from going from last container to cranePosition
-            currentCost = currentCost + cost
+            final_path_cost = currentPathCost + cost
+            print(f"Final path cost: {final_path_cost} (path cost: {currentPathCost}, crane return: {cost})")
             #add the move from last cotaniner back to crane position
             movesContainer.append([(endX,endY), (8,0)])
-            return currentCost, currentState, movesContainer
+            return final_path_cost, currentState, movesContainer
         #gets all the containers in the state
         containers = move_operators.getAllContainers(currentState)
         #filters and only get valid containers
@@ -152,12 +153,13 @@ def aStarSearch(startingState: puzzle_state.PuzzleState) -> 'Path & Cost':
                         key = hashing.createKey(updateState)
                         if key not in hashMap: #only queue unique states
                             cost = search_nodes.bfs(currentState, container, nextC)
-                            childCost = currentCost + cost + craneCost
+                            childPathCost = currentPathCost + cost + craneCost
                             childMoves.append([(startX, startY), (endX, endY)])
                             #next (iter) increments by 1 resulting in a uniqueId each time
                             heuristic_value = heuristics.manhattan_distance_heuristic(updateState)
-                            total_cost = childCost + heuristic_value
-                            heapq.heappush(priority_queue, (total_cost, next(uniqueId), updateState, childMoves))
+                            total_cost = childPathCost + heuristic_value
+                            print(f"Adding state to queue - path cost: {childPathCost}, heuristic: {heuristic_value}, total: {total_cost}")
+                            heapq.heappush(priority_queue, (total_cost, next(uniqueId), updateState, childMoves, childPathCost))
                             hashMap[key] = True #update hashMap
         #already accounted for the crane so set it to false
         startAtCrane = False
