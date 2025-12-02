@@ -21,7 +21,10 @@ def get_cell_color(cell: Cell, is_source: bool = False, is_target: bool = False)
     else:
         return "#d2b48c"
         
-def visualize_state(state: PuzzleState, message: Optional[str] = None, source_location: Optional[List[tuple[int, int]]] = None, target_location: Optional[List[tuple[int, int]]] = None, fig = None, ax = None, logger_message: Optional[str] = None):
+def visualize_state(state: PuzzleState, message: Optional[str] = None, source_location: Optional[List[tuple[int, int]]] = None, 
+                    target_location: Optional[List[tuple[int, int]]] = None, fig = None, ax = None, 
+                    logger_message: Optional[str] = None, manifest_name: Optional[str] = None, 
+                    colored_message_parts: Optional[dict] = None):
     if fig is None or ax is None:
         plt.ion()
         fig, ax = plt.subplots(figsize = (16,10))
@@ -69,12 +72,14 @@ def visualize_state(state: PuzzleState, message: Optional[str] = None, source_lo
     ax.set_yticklabels(range(1, rows + 1))
     ax.set_ylabel('Row', fontsize = 12, fontweight = 'bold')
 
-    title = 'Manifest Visualizer'
+    title = manifest_name
     if message:
         title += f'\n{message}'
     ax.set_title(title, fontsize = 14, fontweight = 'bold', pad = 30)
-    if logger_message:
-        title += f'\n{logger_message}'
+
+    if colored_message_parts:
+        render_colored_message(ax, colored_message_parts)
+    elif logger_message:
         ax.text(0.5, 1.02, logger_message, transform = ax.transAxes, ha = 'center', va = 'bottom', fontsize = 12, fontweight = 'normal')
 
     plt.tight_layout()
@@ -83,8 +88,40 @@ def visualize_state(state: PuzzleState, message: Optional[str] = None, source_lo
     plt.pause(0.001)
     return fig, ax
 
+def render_colored_message(ax, parts):
+    fontsize = 12
+    y_pos = 1.02
+    full_text = parts.get('counter', '') + parts. get('source', '') + parts.get('action', '') + parts.get('target', '')
+    fig = ax.get_figure()
+    renderer = fig.canvas.get_renderer()
+
+    text_to_measure = ax.text(0,0, full_text, fontsize = fontsize, transform = ax.transAxes)
+    bounds = text_to_measure.get_window_extent(renderer = renderer)
+    text_to_measure.remove()
+
+    bounds_axes = bounds.transformed(ax.transAxes.inverted())
+    total_width = bounds_axes.width
+    x_start = 0.5 - total_width / 2
+    x_pos = x_start
+    
+    text_parts = [
+        (parts.get('counter', '' ''), 'black'),
+        (parts.get('source', ''), '#17DD1E'),
+        (parts.get('action', '' ''), 'black'),
+        (parts.get('target', '' ''), '#CB1609'),
+    ]
+
+    for text, color in text_parts:
+        if text:
+            t = ax.text(x_pos, y_pos, text, transform = ax.transAxes, ha = 'left', va = 'bottom', fontsize = fontsize, fontweight = 'normal', color = color)
+            bounds = t.get_window_extent(renderer=renderer)
+            bounds_axes = bounds.transformed(ax.transAxes.inverted())
+            x_pos += bounds_axes.width
+
 def visualize_steps(initial_state: PuzzleState, all_moves: List[List[tuple[int, int]]], on_complete_callback = None, num_moves: int = 0, duration: float = 0.0):
     curr_state = copy.deepcopy(initial_state)
+    base_name = manifest_io.MANIFEST_FILENAME
+    manifest_name = base_name[:-4] + "OUTBOUND.txt"
     state_tracker = {
         'move_index': -1,
         'all_moves': all_moves,
@@ -98,6 +135,8 @@ def visualize_steps(initial_state: PuzzleState, all_moves: List[List[tuple[int, 
         'on_complete': on_complete_callback,
         'current_logger_message': None,
         'solution_message': f"Balance solution found, it will require {num_moves} moves/{duration:.2f} seconds.",
+        'manifest_name': manifest_name,
+        'total_moves': len(all_moves),
     }
     def on_text_submit(text):
         if text.strip():
@@ -143,7 +182,9 @@ def visualize_steps(initial_state: PuzzleState, all_moves: List[List[tuple[int, 
 
             # Last state
             if state_tracker['move_index'] >= len(state_tracker['all_moves']):
-                visualize_state(state_tracker['curr_state'], "Updated Manifest - 'q' to quit, 'p' to log, 'r' to load new manifest", fig=state_tracker['fig'], ax=state_tracker['ax'], logger_message=state_tracker['current_logger_message'])
+                visualize_state(state_tracker['curr_state'], "Updated Manifest - 'q' to quit, 'p' to log, 'r' to load new manifest", fig=state_tracker['fig'], ax=state_tracker['ax'], manifest_name=state_tracker['manifest_name'])
+                ax.text(0.5, 1.02, "Reminder: Email file in output folder to captain", transform = ax.transAxes, ha = 'center', va = 'bottom', fontsize = 12, fontweight = 'normal')
+
                 return
             
             start_pos, end_pos = state_tracker['all_moves'][state_tracker['move_index']]
@@ -154,25 +195,42 @@ def visualize_steps(initial_state: PuzzleState, all_moves: List[List[tuple[int, 
             strPrev_pos = f"[0{prev_pos[0]},0{prev_pos[1]}]"
             strUpdated_pos = f"[0{updated_pos[0]},0{updated_pos[1]}]"
 
+            current_move_num = state_tracker['move_index'] + 1
+            total_moves = state_tracker['total_moves']
             # INITIAL MOVE
             if start_x == 8 and start_y == 0:
                 source_locations = []
                 target_locations = [end_pos]
-                move_message = f"PARK was moved to {strUpdated_pos}"
-                logger.log_message(move_message)
-                state_tracker['current_logger_message'] = move_message
+                #move_message = f"{current_move_num} of {total_moves}: PARK was moved to {strUpdated_pos}"
+                logger.log_message(f"PARK was moved to {strUpdated_pos}")
+                colored_parts = {
+                    'counter': f"{current_move_num} of {total_moves}: ",
+                    'source': "PARK",
+                    'action': " was moved to ",
+                    'target': strUpdated_pos
+                }
             # FINAL MOVE
             elif end_x == 8 and end_y == 0:
                 source_locations = [start_pos]
                 target_locations = []
-                move_message = f"{strPrev_pos} was moved to PARK"
-                logger.log_message(move_message)
-                state_tracker['current_logger_message'] = move_message
+                #move_message = f"{current_move_num} of {total_moves}: {strPrev_pos} was moved to PARK"
+                logger.log_message(f"{strPrev_pos} was moved to PARK")
+                colored_parts = {
+                    'counter': f"{current_move_num} of {total_moves}: ",
+                    'source': strPrev_pos,
+                    'action': " was moved to ",
+                    'target': "PARK"
+                }
             # NORMAL MOVE
             else:
-                move_message = f"{strPrev_pos} was moved to {strUpdated_pos}"
-                logger.log_message(move_message)
-                state_tracker['current_logger_message'] = move_message
+                #move_message = f"{current_move_num} of {total_moves}: {strPrev_pos} was moved to {strUpdated_pos}"
+                logger.log_message(f"{strPrev_pos} was moved to {strUpdated_pos}")
+                colored_parts = {
+                    'counter': f"{current_move_num} of {total_moves}: ",
+                    'source': strPrev_pos,
+                    'action': " was moved to ",
+                    'target': strUpdated_pos
+                }
                 container = state_tracker['curr_state'].grid[start_x][start_y]
                 source_locations = [start_pos]
                 target_locations = [end_pos]
@@ -181,7 +239,7 @@ def visualize_steps(initial_state: PuzzleState, all_moves: List[List[tuple[int, 
                
                 # Clear prev position
                 state_tracker['curr_state'].grid[start_x][start_y] = Cell(exists=True, weight=0, description="UNUSED")
-            visualize_state(state_tracker['curr_state'], "Press ENTER to continue, 'p' to log, 'q' to quit", source_locations, target_locations, fig = state_tracker['fig'], ax=state_tracker['ax'], logger_message=state_tracker['current_logger_message'])
+            visualize_state(state_tracker['curr_state'], "Press ENTER to continue, 'p' to log, 'q' to quit", source_locations, target_locations, fig = state_tracker['fig'], ax=state_tracker['ax'], colored_message_parts=colored_parts, manifest_name=state_tracker['manifest_name'])
                 
 
     fig = plt.gcf()
@@ -191,7 +249,7 @@ def visualize_steps(initial_state: PuzzleState, all_moves: List[List[tuple[int, 
     
     state_tracker['key_handler_id'] = fig.canvas.mpl_connect('key_press_event', on_key_press)
     fig.canvas.mpl_connect('key_press_event', on_key_press)
-    visualize_state(curr_state, "Initial Manifest - ENTER to continue, 'p' to log, 'q' to quit", fig = fig, ax = ax, logger_message=state_tracker['solution_message'])
+    visualize_state(curr_state, "Initial Manifest - ENTER to continue, 'p' to log, 'q' to quit", fig = fig, ax = ax, logger_message=state_tracker['solution_message'], manifest_name=state_tracker['manifest_name'])
     fig.canvas.draw()
     
 def run_interface():
