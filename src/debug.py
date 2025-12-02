@@ -149,10 +149,11 @@ def debug_hashMap(state: puzzle_state):
       
 def debug_ucsAlg(state: puzzle_state):
       start = time.time()
-      finalCost, finalPuzzleState, allMoves = search_algorithm.uniformCostSearch(state)
+      finalCost, finalPuzzleState, allMoves, allCost = search_algorithm.uniformCostSearch(state)
       duration = time.time() - start
       ceiling_duration = math.ceil(duration)
       print(f"Final Cost: {finalCost}")
+      print(f"All Cost: {allCost}")
       print(f"{(allMoves)}")
       logger.log_balance_sol(len(allMoves), ceiling_duration)
       visualization.visualize_steps(state, allMoves)
