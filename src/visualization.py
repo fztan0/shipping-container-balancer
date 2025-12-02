@@ -53,16 +53,13 @@ def visualize_state(state: PuzzleState, message: Optional[str] = None, source_lo
             if not cell.exists:
                 # nan
                 ax.text(col + 0.5, y_pos, 'NAN', ha='center', va='center', fontsize = 9, fontweight = 'bold', color = 'white')
-                ax.text(col + 0.5, y_pos - 0.2, f'{cell.weight}', ha='center', va = 'center', fontsize = 8, color = 'white')
             elif cell.description == "UNUSED":
                 # unused
                 ax.text(col + 0.5, y_pos, 'UNUSED', ha='center', va='center', fontsize = 9, fontweight = 'bold', color = '#666666')
-                ax.text(col + 0.5, y_pos - 0.2, f'{cell.weight}', ha='center', va = 'center', fontsize = 8, color = 'black')
             else:
                 # containers
                 desc = cell.description[:8] + "..." if len(cell.description) > 8 else cell.description
-                ax.text(col + 0.5, y_pos + 0.2, desc, ha = 'center', va ='center', fontsize = 10, fontweight = 'bold', color = 'white')
-                ax.text(col + 0.5, y_pos - 0.2, f'{cell.weight}', ha='center', va = 'center', fontsize = 8, color = 'white')
+                ax.text(col + 0.5, y_pos, desc, ha = 'center', va ='center', fontsize = 10, fontweight = 'bold', color = 'white')
 
     ax.set_xticks([i + 0.5 for i in range(cols)])
     ax.set_xticklabels(range(1, cols + 1))
