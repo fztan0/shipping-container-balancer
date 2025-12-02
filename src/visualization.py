@@ -72,9 +72,10 @@ def visualize_state(state: PuzzleState, message: Optional[str] = None, source_lo
     title = 'Shipping Container Grid'
     if message:
         title += f'\n{message}'
+    ax.set_title(title, fontsize = 14, fontweight = 'bold', pad = 30)
     if logger_message:
         title += f'\n{logger_message}'
-    ax.set_title(title, fontsize = 14, fontweight = 'bold', pad = 20)
+        ax.text(0.5, 1.02, logger_message, transform = ax.transAxes, ha = 'center', va = 'bottom', fontsize = 12, fontweight = 'normal')
 
     plt.tight_layout()
     plt.grid(False)
