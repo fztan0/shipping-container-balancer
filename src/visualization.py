@@ -122,6 +122,7 @@ def visualize_steps(initial_state: PuzzleState, all_moves: List[List[tuple[int, 
     curr_state = copy.deepcopy(initial_state)
     base_name = manifest_io.MANIFEST_FILENAME
     manifest_name = base_name[:-4] + "OUTBOUND.txt"
+    is_balanced = num_moves == 0
     state_tracker = {
         'move_index': -1,
         'all_moves': all_moves,
@@ -134,9 +135,10 @@ def visualize_steps(initial_state: PuzzleState, all_moves: List[List[tuple[int, 
         'initial_state': initial_state,
         'on_complete': on_complete_callback,
         'current_logger_message': None,
-        'solution_message': f"Balance solution found, it will require {num_moves} moves/{duration:.2f} seconds.",
+        'solution_message': "" if is_balanced else f"Balance solution found, it will require {num_moves} moves/{duration:.2f} seconds.",
         'manifest_name': manifest_name,
         'total_moves': len(all_moves),
+        'is_balanced': is_balanced,
     }
     def on_text_submit(text):
         if text.strip():
@@ -176,11 +178,16 @@ def visualize_steps(initial_state: PuzzleState, all_moves: List[List[tuple[int, 
         if event.key == 'p':
             show_text_input()
             return
+        if state_tracker['is_balanced']:
+            if event.key == 'enter' or event.key ==' ':
+                visualize_state(state_tracker['curr_state'], "Updated Manifest - 'q' to quit, 'p' to log, 'r' to load new manifest", fig=state_tracker['fig'], ax=state_tracker['ax'], manifest_name=state_tracker['manifest_name'])
+                ax.text(0.5, 1.02, "Reminder: Email file in output folder to captain", transform = ax.transAxes, ha = 'center', va = 'bottom', fontsize = 12, fontweight = 'normal')
+                return
 
         if event.key == 'enter' or event.key == ' ':
             state_tracker['move_index'] += 1
 
-            # Last state
+            # Last statef
             if state_tracker['move_index'] >= len(state_tracker['all_moves']):
                 visualize_state(state_tracker['curr_state'], "Updated Manifest - 'q' to quit, 'p' to log, 'r' to load new manifest", fig=state_tracker['fig'], ax=state_tracker['ax'], manifest_name=state_tracker['manifest_name'])
                 ax.text(0.5, 1.02, "Reminder: Email file in output folder to captain", transform = ax.transAxes, ha = 'center', va = 'bottom', fontsize = 12, fontweight = 'normal')
@@ -249,7 +256,8 @@ def visualize_steps(initial_state: PuzzleState, all_moves: List[List[tuple[int, 
     
     state_tracker['key_handler_id'] = fig.canvas.mpl_connect('key_press_event', on_key_press)
     fig.canvas.mpl_connect('key_press_event', on_key_press)
-    visualize_state(curr_state, "Initial Manifest - ENTER to continue, 'p' to log, 'q' to quit", fig = fig, ax = ax, logger_message=state_tracker['solution_message'], manifest_name=state_tracker['manifest_name'])
+    initial_message = "Manifest Already Balanced - ENTER to continue, 'p' to log, 'q' to quit" if is_balanced else "Initial Manifest - ENTER to continue, 'p' to log, 'q' to quit"
+    visualize_state(curr_state, initial_message, fig = fig, ax = ax, logger_message=state_tracker['solution_message'], manifest_name=state_tracker['manifest_name'])
     fig.canvas.draw()
     
 def run_interface():
