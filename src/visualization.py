@@ -8,6 +8,7 @@ from matplotlib.widgets import TextBox, Button
 import manifest_io
 import search_algorithm
 from output_formatter import outputPuzzle
+import os
 
 def get_cell_color(cell: Cell, is_source: bool = False, is_target: bool = False) -> str:
     if is_source:
@@ -76,12 +77,12 @@ def visualize_state(state: PuzzleState, message: Optional[str] = None, source_lo
     title = manifest_name
     if message:
         title += f'\n{message}'
-    ax.set_title(title, fontsize = 14, fontweight = 'bold', pad = 30)
+    ax.set_title(title, fontsize = 18, fontweight = 'bold', pad = 30)
 
     if colored_message_parts:
         render_colored_message(ax, colored_message_parts)
     elif logger_message:
-        ax.text(0.5, 1.02, logger_message, transform = ax.transAxes, ha = 'center', va = 'bottom', fontsize = 12, fontweight = 'normal')
+        ax.text(0.5, 1.02, logger_message, transform = ax.transAxes, ha = 'center', va = 'bottom', fontsize = 14, fontweight = 'normal')
 
     plt.tight_layout()
     plt.grid(False)
@@ -122,8 +123,7 @@ def render_colored_message(ax, parts):
 
 def visualize_steps(initial_state: PuzzleState, all_moves: List[List[tuple[int, int]]], all_cost: List[float], on_complete_callback = None, num_moves: int = 0, duration: float = 0.0):
     curr_state = copy.deepcopy(initial_state)
-    base_name = manifest_io.MANIFEST_FILENAME
-    manifest_name = base_name[:-4] + "OUTBOUND.txt"
+    manifest_name = manifest_io.MANIFEST_FILENAME
     is_balanced = num_moves == 0
     state_tracker = {
         'move_index': -1,
@@ -141,8 +141,16 @@ def visualize_steps(initial_state: PuzzleState, all_moves: List[List[tuple[int, 
         'manifest_name': manifest_name,
         'total_moves': len(all_moves),
         'is_balanced': is_balanced,
-        'all_cost': all_cost
+        'all_cost': all_cost,
+        'outbound_written': False,
     }
+    def write_outbound_file():
+        if not state_tracker['outbound_written']:
+            base_name = os.path.splitext(manifest_io.MANIFEST_FILENAME)[0]
+            outbound_filename = base_name + "OUTBOUND.txt"
+            outputPuzzle(state_tracker['curr_state'], outbound_filename)
+            state_tracker['outbound_written'] = True
+
     def on_text_submit(text):
         if text.strip():
             logger.log_message(text.strip())
@@ -183,17 +191,19 @@ def visualize_steps(initial_state: PuzzleState, all_moves: List[List[tuple[int, 
             return
         if state_tracker['is_balanced']:
             if event.key == 'enter' or event.key ==' ':
+                write_outbound_file()
                 visualize_state(state_tracker['curr_state'], "Updated Manifest - 'q' to quit, 'p' to log, 'r' to load new manifest", fig=state_tracker['fig'], ax=state_tracker['ax'], manifest_name=state_tracker['manifest_name'])
-                ax.text(0.5, 1.02, "Reminder: Email file in output folder to captain", transform = ax.transAxes, ha = 'center', va = 'bottom', fontsize = 12, fontweight = 'normal')
+                ax.text(0.5, 1.02, "Reminder: Email file in output folder to captain", transform = ax.transAxes, ha = 'center', va = 'bottom', fontsize = 14, fontweight = 'normal')
                 return
 
         if event.key == 'enter' or event.key == ' ':
             state_tracker['move_index'] += 1
 
-            # Last statef
+            # Last state
             if state_tracker['move_index'] >= len(state_tracker['all_moves']):
+                write_outbound_file()
                 visualize_state(state_tracker['curr_state'], "Updated Manifest - 'q' to quit, 'p' to log, 'r' to load new manifest", fig=state_tracker['fig'], ax=state_tracker['ax'], manifest_name=state_tracker['manifest_name'])
-                ax.text(0.5, 1.02, "Reminder: Email file in output folder to captain", transform = ax.transAxes, ha = 'center', va = 'bottom', fontsize = 12, fontweight = 'normal')
+                ax.text(0.5, 1.02, "Reminder: Email file in output folder to captain", transform = ax.transAxes, ha = 'center', va = 'bottom', fontsize = 14, fontweight = 'normal')
 
                 return
             
@@ -325,11 +335,11 @@ def run_interface():
         state_tracker['ax'].axis('off')
 
         # Menu title
-        state_tracker['ax'].text(6,6, 'Load Balancing System', ha='center', va='center', fontsize=25, fontweight = 'bold')
-        state_tracker['ax'].text(6,5, 'Please enter manifest to load', ha='center', va='center', fontsize=14)
+        state_tracker['ax'].text(6,6, 'Load Balancing System', ha='center', va='center', fontsize=35, fontweight = 'bold')
+        state_tracker['ax'].text(6,5, 'Please enter manifest to load', ha='center', va='center', fontsize=20)
 
         # Menu input
-        state_tracker['text_box_ax'] = state_tracker['fig'].add_axes([0.3, 0.45, 0.4, 0.05])
+        state_tracker['text_box_ax'] = state_tracker['fig'].add_axes([0.3, 0.45, 0.45, 0.05])
         state_tracker['text_box'] = TextBox(state_tracker['text_box_ax'], 'Manifest:', initial='')
         state_tracker['text_box'].on_submit(on_manifest_submit)
 

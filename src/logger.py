@@ -29,7 +29,7 @@ def log_balance_sol(num_moves, duration):
 # reminder pop-up to operator to send file was displayed"
 def log_finish_operation():
   new_output = os.path.splitext(manifest_io.MANIFEST_FILENAME)[0]
-  events.append(f"{timestamp()} Finished a Cycle. Manifest {new_output}OUTBOUND.txt was written to desktop, and a reminder pop-up to operator to send file was displayed.")
+  events.append(f"{timestamp()} Finished a Cycle. Manifest {new_output}{start_time.strftime("%m_%d_%Y_%H%M")}.txt was written to desktop, and a reminder pop-up to operator to send file was displayed.")
 
 # at the very end of the program / day
 def log_kill():
