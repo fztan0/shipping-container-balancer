@@ -12,20 +12,11 @@ def updatedState(state: puzzle_state.PuzzleState, originPoint: list[tuple[int,in
     grid[endX][endY] = startCell
     return updateState
 
-def calculatePoint(start: tuple[int,int], final: tuple[int,int]) -> tuple[int,int]:
-    x0 = start[0]
-    y0 = start[1]
-    x1 = final[0]
-    y1 = final[1]
-    calculateX = abs(x0 - x1)
-    calculateY = abs(y0 - y1)
-    return (calculateX, calculateY)
-
 def isBoundsValid(point: tuple[int,int]) -> bool:
     row = point[0]
     col = point[1]
     #note this is zero indexing
-    #row can't go below 0 
+    #row can't go below 0
     #col can't go to the left of 0 and to the right of 11. row is 9 since need to account for the parked configuration
     if row > -1 and row < 9 and col > -1 and col < 12:
         return True
@@ -57,12 +48,11 @@ def bfs(state: puzzle_state.PuzzleState, originPoint: list[tuple[int,int], puzzl
         if rowCurrent == rowGoal and colCurrent == colGoal:
             return currentCost
         for move in adjacent_moves:
-            nextPosition = calculatePoint(currentPoint, move)
-            rowNext, colNext = nextPosition
+            rowNext = rowCurrent + move[0]
+            colNext = colCurrent + move[1]
             #need to check if the next position is valid and unvisted
             if isBoundsValid((rowNext, colNext)) and visited[rowNext][colNext] == False:
                 if grid[rowNext][colNext].description == "UNUSED" or (rowNext, colNext) == goalPoint: #might need to adjust this later for a state that "is in the air" above the state
                     calculate_cost = currentCost + 1
-                    queue.append([nextPosition, calculate_cost]) 
+                    queue.append([(rowNext, colNext), calculate_cost])
     return 0
-        

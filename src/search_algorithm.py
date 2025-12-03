@@ -6,10 +6,12 @@ import hashing
 import itertools # https://docs.python.org/3/library/itertools.html#itertools.count. using this python library to get a unique count
 import copy
 import math
+import time
+import heuristics
 
 '''
 Parameters:
-state : the puzzle state 
+state : the puzzle state
 p0 : original weight of the port side
 s0: original weight of the starboard side
 
@@ -29,7 +31,7 @@ def isGoalState(state: puzzle_state.PuzzleState, p0: int, s0:int) -> bool:
         return False
 
 #Returns [Pr, Sr]. Pr represents sum of the all the weights on the port side
-#Sr represents sum of all the weights in the starboard side 
+#Sr represents sum of all the weights in the starboard side
 def getCurrentWeight(state: puzzle_state.PuzzleState) -> tuple[int,int]:
     grid = state.grid
     total_p_weight = 0
@@ -50,7 +52,7 @@ Two borderline cases for goal state check (based on inital manifest):
     2. if there is just only one container in either the port side or starboard side return true
     3. If there are no containers at all
     4. If there are containers but all have 0 weights except for 1 container
-everything else return false 
+everything else return false
 '''
 def valid_edgecase_initialContainers(state: puzzle_state.PuzzleState) -> bool:
     grid = state.grid
@@ -85,20 +87,30 @@ def valid_edgecase_initialContainers(state: puzzle_state.PuzzleState) -> bool:
         return True
     return False
 
+
+
+USE_ASTAR = True  # toggle True for A* with Manhattan Distance heuristic, False for UCS
+
+
+
 '''
 Perform uniform cost search to determine proper ordering of containers
 
 Will have a priority queue containing (cost, puzzlestate, list of moves)
 
-Parameter: 
+Parameter:
     - startingState: gets the current puzzle state from the manifest
 Return:
     coordinate = tuple[int , int]
     move = tuple[coordinate , coordinate]
-    pathAndCost = tuple[int, finalPuzzleState, list[move], list[cost]] 
+    pathAndCost = tuple[int, finalPuzzleState, list[move], list[cost]]
 
 '''
 def uniformCostSearch(startingState: puzzle_state.PuzzleState) -> 'Path & Cost':
+    print(f"USE_ASTAR={USE_ASTAR}")
+    search_start_time = time.time()
+
+
     uniqueId = itertools.count() #iterator
     #if starting state is the goal return an empty list. No moves required
     if valid_edgecase_initialContainers(startingState) == True:
@@ -116,17 +128,28 @@ def uniformCostSearch(startingState: puzzle_state.PuzzleState) -> 'Path & Cost':
     priority_queue = []
     startAtCrane = True
     currentDifference = math.inf
-    #initalize a minheap and keep track of cost, uniqueId, puzzle state, list of moves
-    #create a uniqueId to account as choice factor when two states have the same cost
-    heapq.heappush(priority_queue, (0, next(uniqueId), startingState, listofMoves, listofCost))
+
+    # priority queue uses f(n) = g(n) + h(n) for A*, g(n) for UCS
+    h_start = heuristics.heuristic(startingState) if USE_ASTAR else 0
+    start_g = 0
+    start_f = start_g + h_start
+    heapq.heappush(priority_queue, (start_f, next(uniqueId), start_g, startingState, listofMoves, listofCost))
+    node_count = 0
     while priority_queue:
-        currentCost, _, currentState, currentMoves, costList =  heapq.heappop(priority_queue)
+        current_f, _, current_g, currentState, currentMoves, costList = heapq.heappop(priority_queue)
+        currentCost = current_g
         movesContainer = copy.deepcopy(currentMoves)
         intermediateCost = copy.deepcopy(costList)
-        ph,sh = getCurrentWeight(currentState)
+        node_count += 1
+
+        # if node_count % 100 == 0:
+            # print(f"Explored {node_count} nodes...")
+
+
+        ph,sh = heuristics.get_current_weight(currentState)
         if(abs(ph-sh) < currentDifference):
             currentDifference = abs(ph-sh)
-            finalResult_Difference = (currentCost, currentState, currentMoves, costList)
+            finalResult_Difference = (current_g, currentState, currentMoves, costList)
         if isGoalState(currentState, ph, sh):
             numMoves = len(movesContainer)
             lastContainerCoord = movesContainer[numMoves - 1] #get the coordinate of the last container
@@ -138,6 +161,13 @@ def uniformCostSearch(startingState: puzzle_state.PuzzleState) -> 'Path & Cost':
             currentCost = currentCost + cost
             #add the move from last cotaniner back to crane position
             movesContainer.append([(endX,endY), (8,0)])
+
+
+            search_time = time.time() - search_start_time
+            print(f"Solution found: cost={currentCost}, nodes processed={node_count}, time={search_time:.2f}s")
+            print(f"Final nodes processed: {node_count}")
+
+
             return currentCost, currentState, movesContainer,intermediateCost
         #gets all the containers in the state
         containers = move_operators.getAllContainers(currentState)
@@ -172,10 +202,13 @@ def uniformCostSearch(startingState: puzzle_state.PuzzleState) -> 'Path & Cost':
                             if craneCost != 0:
                                 childCostList.append(craneCost)
                             childCostList.append(cost + craneMove)
-                            childCost = currentCost + cost + craneCost + craneMove
+                            child_g = currentCost + cost + craneCost + craneMove
+                            child_h = heuristics.heuristic(updateState) if USE_ASTAR else 0
+                            child_f = child_g + child_h
                             childMoves.append([(startX, startY), (endX, endY)])
+
                             #next (iter) increments by 1 resulting in a uniqueId each time
-                            heapq.heappush(priority_queue, (childCost, next(uniqueId), updateState, childMoves, childCostList))
+                            heapq.heappush(priority_queue, (child_f, next(uniqueId), child_g, updateState, childMoves, childCostList))
                             hashMap[key] = True #update hashMap
         #already accounted for the crane so set it to false
         startAtCrane = False
@@ -192,5 +225,9 @@ def uniformCostSearch(startingState: puzzle_state.PuzzleState) -> 'Path & Cost':
     currentCost = currentCost + cost
     #add the move from last cotaniner back to crane position
     currentMoves.append([(endX,endY), (8,0)])
+    search_time = time.time() - search_start_time
+
+    print(f"No optimal goal found (best diff), cost={currentCost}, nodes processed={node_count}, time={search_time:.2f}s")
+
     return currentCost, currentState, currentMoves, costList
 
