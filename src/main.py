@@ -8,7 +8,7 @@ def main():
       # example receive
       logger.initialize_logger()
 
-      # puzzle = manifest_io.load_manifest_from_user()
+      #puzzle = manifest_io.load_manifest_from_user()
 
       # debug.debug_print_formatted_loaded_manifest(puzzle)
       # # debug.debug_print_raw_loaded_manifest(puzzle_state)
@@ -22,8 +22,7 @@ def main():
       # #debug.debug_bfs(puzzle)
       # # debug.debug_ucsAlg(puzzle)
 
-      # debug.debug_ucsAlg(puzzle)
-
+      #debug.debug_output(puzzle)
 
       # logger.log_finish_operation()
       # logger.log_kill()
