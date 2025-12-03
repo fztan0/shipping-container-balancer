@@ -91,7 +91,7 @@ def visualize_state(state: PuzzleState, message: Optional[str] = None, source_lo
 def render_colored_message(ax, parts):
     fontsize = 12
     y_pos = 1.02
-    full_text = parts.get('counter', '') + parts. get('source', '') + parts.get('action', '') + parts.get('target', '')
+    full_text = parts.get('counter', '') + parts. get('source', '') + parts.get('action', '') + parts.get('target', '') + parts.get('duration', '')
     fig = ax.get_figure()
     renderer = fig.canvas.get_renderer()
 
@@ -105,10 +105,11 @@ def render_colored_message(ax, parts):
     x_pos = x_start
     
     text_parts = [
-        (parts.get('counter', '' ''), 'black'),
+        (parts.get('counter', ''), 'black'),
         (parts.get('source', ''), '#17DD1E'),
-        (parts.get('action', '' ''), 'black'),
-        (parts.get('target', '' ''), '#CB1609'),
+        (parts.get('action', ''), 'black'),
+        (parts.get('target', ''), '#CB1609'),
+        (parts.get('duration', ''), 'black'),
     ]
 
     for text, color in text_parts:
@@ -118,7 +119,7 @@ def render_colored_message(ax, parts):
             bounds_axes = bounds.transformed(ax.transAxes.inverted())
             x_pos += bounds_axes.width
 
-def visualize_steps(initial_state: PuzzleState, all_moves: List[List[tuple[int, int]]], on_complete_callback = None, num_moves: int = 0, duration: float = 0.0):
+def visualize_steps(initial_state: PuzzleState, all_moves: List[List[tuple[int, int]]], all_cost: List[float], on_complete_callback = None, num_moves: int = 0, duration: float = 0.0):
     curr_state = copy.deepcopy(initial_state)
     base_name = manifest_io.MANIFEST_FILENAME
     manifest_name = base_name[:-4] + "OUTBOUND.txt"
@@ -135,10 +136,11 @@ def visualize_steps(initial_state: PuzzleState, all_moves: List[List[tuple[int, 
         'initial_state': initial_state,
         'on_complete': on_complete_callback,
         'current_logger_message': None,
-        'solution_message': "" if is_balanced else f"Balance solution found, it will require {num_moves} moves/{duration:.2f} seconds.",
+        'solution_message': "" if is_balanced else f"Balance solution found, it will require {num_moves} moves/{duration} minute(s).",
         'manifest_name': manifest_name,
         'total_moves': len(all_moves),
         'is_balanced': is_balanced,
+        'all_cost': all_cost
     }
     def on_text_submit(text):
         if text.strip():
@@ -195,6 +197,7 @@ def visualize_steps(initial_state: PuzzleState, all_moves: List[List[tuple[int, 
                 return
             
             start_pos, end_pos = state_tracker['all_moves'][state_tracker['move_index']]
+            move_cost = state_tracker['all_cost'][state_tracker['move_index']]
             start_x, start_y = start_pos
             end_x, end_y = end_pos
             prev_pos = (start_x + 1, start_y + 1)
@@ -204,39 +207,43 @@ def visualize_steps(initial_state: PuzzleState, all_moves: List[List[tuple[int, 
 
             current_move_num = state_tracker['move_index'] + 1
             total_moves = state_tracker['total_moves']
+            duration_text = f" (Duration: {move_cost} min)"
             # INITIAL MOVE
             if start_x == 8 and start_y == 0:
                 source_locations = []
                 target_locations = [end_pos]
                 #move_message = f"{current_move_num} of {total_moves}: PARK was moved to {strUpdated_pos}"
-                logger.log_message(f"PARK was moved to {strUpdated_pos}")
+                logger.log_message(f"PARK was moved to {strUpdated_pos}{duration_text}")
                 colored_parts = {
                     'counter': f"{current_move_num} of {total_moves}: ",
                     'source': "PARK",
                     'action': " was moved to ",
-                    'target': strUpdated_pos
+                    'target': strUpdated_pos,
+                    'duration': duration_text
                 }
             # FINAL MOVE
             elif end_x == 8 and end_y == 0:
                 source_locations = [start_pos]
                 target_locations = []
                 #move_message = f"{current_move_num} of {total_moves}: {strPrev_pos} was moved to PARK"
-                logger.log_message(f"{strPrev_pos} was moved to PARK")
+                logger.log_message(f"{strPrev_pos} was moved to PARK{duration_text}")
                 colored_parts = {
                     'counter': f"{current_move_num} of {total_moves}: ",
                     'source': strPrev_pos,
                     'action': " was moved to ",
-                    'target': "PARK"
+                    'target': "PARK",
+                    'duration': duration_text
                 }
             # NORMAL MOVE
             else:
                 #move_message = f"{current_move_num} of {total_moves}: {strPrev_pos} was moved to {strUpdated_pos}"
-                logger.log_message(f"{strPrev_pos} was moved to {strUpdated_pos}")
+                logger.log_message(f"{strPrev_pos} was moved to {strUpdated_pos}{duration_text}")
                 colored_parts = {
                     'counter': f"{current_move_num} of {total_moves}: ",
                     'source': strPrev_pos,
                     'action': " was moved to ",
-                    'target': strUpdated_pos
+                    'target': strUpdated_pos,
+                    'duration': duration_text
                 }
                 container = state_tracker['curr_state'].grid[start_x][start_y]
                 source_locations = [start_pos]
@@ -288,12 +295,12 @@ def run_interface():
             puzzle = manifest_io.load_ship_manifest(file_path)
 
             # Run algorithm here
-            finalCost, finalPuzzleState, allMoves = search_algorithm.uniformCostSearch(puzzle)
-            duration = finalCost / 60.0
+            finalCost, finalPuzzleState, allMoves, allCost = search_algorithm.uniformCostSearch(puzzle)
+            duration = finalCost
             logger.log_balance_sol(len(allMoves), duration)
 
             hide_input_ui()
-            visualize_steps(puzzle, allMoves, on_complete_callback=show_input_ui, num_moves=len(allMoves), duration=duration)
+            visualize_steps(puzzle, allMoves, allCost, on_complete_callback=show_input_ui, num_moves=len(allMoves), duration=duration)
 
         except FileNotFoundError:
             print(f"Error: File '{filename}' not found in data/ directory")

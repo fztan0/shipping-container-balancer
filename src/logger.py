@@ -23,7 +23,7 @@ def log_manifest_opened(num_containers):
   events.append(f"{timestamp()} Manifest {manifest_io.MANIFEST_FILENAME} is opened, there are {num_containers} on the ship.")
 
 def log_balance_sol(num_moves, duration):
-  events.append(f"{timestamp()} Balance solution found, it will require {num_moves} moves/{duration:.2f} seconds.")
+  events.append(f"{timestamp()} Balance solution found, it will require {num_moves} moves/{duration} minute(s).")
 
 # "Finished a Cycle. Manifest HMMAlgecirasOUTBOUND.txt was written to desktop, and a
 # reminder pop-up to operator to send file was displayed"
