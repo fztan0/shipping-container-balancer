@@ -7,6 +7,7 @@ import logger
 from matplotlib.widgets import TextBox, Button
 import manifest_io
 import search_algorithm
+from output_formatter import outputPuzzle
 
 def get_cell_color(cell: Cell, is_source: bool = False, is_target: bool = False) -> str:
     if is_source:
@@ -302,7 +303,7 @@ def run_interface():
             logger.log_balance_sol(len(allMoves), duration)
 
             hide_input_ui()
-            visualize_steps(puzzle, allMoves, allCost, on_complete_callback=show_input_ui, num_moves=len(allMoves), duration=duration)
+            visualize_steps(puzzle, allMoves, allCost,on_complete_callback=show_input_ui, num_moves=len(allMoves), duration=duration)
 
         except FileNotFoundError:
             print(f"Error: File '{filename}' not found in data/ directory")

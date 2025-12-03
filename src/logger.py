@@ -38,7 +38,7 @@ def log_kill():
 def write_logger_to_desktop(): # add a parameter of name_of_port because not all ports will be by MrKeogh
   new_output = os.path.splitext(manifest_io.MANIFEST_FILENAME)[0]
 
-  filename = new_output + "OUTBOUND" + start_time.strftime("%m_%d_%Y_%H%M") + ".txt"
+  filename = new_output + start_time.strftime("%m_%d_%Y_%H%M") + ".txt"
   #desktop_location = os.path.join(os.path.expanduser("~"), "Desktop", filename)
   output_path = os.path.join(os.getcwd(), "output", filename)
   os.makedirs(os.path.join(os.getcwd(), "output"), exist_ok = True)

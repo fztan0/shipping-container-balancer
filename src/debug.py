@@ -8,6 +8,8 @@ import time
 import logger
 import manifest_io
 import math
+import output_formatter
+import os
 
 def debug_print_formatted_loaded_manifest(state: puzzle_state):
       for r in range(1, 9): # rows 1–8
@@ -171,3 +173,9 @@ def debug_logger_example():
       logger.log_kill()
       logger.write_logger_to_desktop()
 
+def debug_output(state: puzzle_state):
+      new_output = os.path.splitext(manifest_io.MANIFEST_FILENAME)[0]
+      filename = new_output + "OUTBOUND" + ".txt"
+      finalCost, finalPuzzleState, allMoves, allCost = search_algorithm.uniformCostSearch(state)
+      output_formatter.outputPuzzle(finalPuzzleState, filename)
+      return
