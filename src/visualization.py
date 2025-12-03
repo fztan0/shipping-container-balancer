@@ -316,11 +316,11 @@ def run_interface():
             visualize_steps(puzzle, allMoves, allCost,on_complete_callback=show_input_ui, num_moves=len(allMoves), duration=duration)
 
         except FileNotFoundError:
-            print(f"Error: File '{filename}' not found in data/ directory")
+            show_input_ui(error_message="File not found or cannot be read")
         except Exception as e:
-            print(f"Error loading manifest: {e}")
+            show_input_ui(error_message="File not found or cannot be read")
 
-    def show_input_ui():
+    def show_input_ui(error_message=None):
         state_tracker['input_mode'] = True
         if state_tracker['fig'] is None:
             plt.ion()
@@ -336,7 +336,10 @@ def run_interface():
 
         # Menu title
         state_tracker['ax'].text(6,6, 'Load Balancing System', ha='center', va='center', fontsize=35, fontweight = 'bold')
-        state_tracker['ax'].text(6,5, 'Please enter manifest to load', ha='center', va='center', fontsize=20)
+        if error_message:
+            state_tracker['ax'].text(6, 5, error_message, ha = 'center', va = 'center', fontsize = 20, color = 'red')
+        else:
+            state_tracker['ax'].text(6,5, 'Please enter manifest to load', ha='center', va='center', fontsize=20)
 
         # Menu input
         state_tracker['text_box_ax'] = state_tracker['fig'].add_axes([0.3, 0.45, 0.45, 0.05])
@@ -363,9 +366,11 @@ def run_interface():
         state_tracker['input_mode'] = False
     
     def on_close(event):
-        logger.log_finish_operation()
-        logger.log_kill()
-        logger.write_logger_to_desktop()
+        # Check actual loading of manifest
+        if logger.events and len(logger.events) >1:
+            logger.log_finish_operation()
+            logger.log_kill()
+            logger.write_logger_to_desktop()
         plt.close('all')
     
     show_input_ui()
