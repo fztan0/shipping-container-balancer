@@ -4,7 +4,9 @@ from typing import List, Optional
 from puzzle_state import PuzzleState, Cell
 import copy
 import logger
-from matplotlib.widgets import TextBox
+from matplotlib.widgets import TextBox, Button
+import manifest_io
+import search_algorithm
 
 def get_cell_color(cell: Cell, is_source: bool = False, is_target: bool = False) -> str:
     if is_source:
@@ -19,7 +21,10 @@ def get_cell_color(cell: Cell, is_source: bool = False, is_target: bool = False)
     else:
         return "#d2b48c"
         
-def visualize_state(state: PuzzleState, message: Optional[str] = None, source_location: Optional[List[tuple[int, int]]] = None, target_location: Optional[List[tuple[int, int]]] = None, fig = None, ax = None):
+def visualize_state(state: PuzzleState, message: Optional[str] = None, source_location: Optional[List[tuple[int, int]]] = None, 
+                    target_location: Optional[List[tuple[int, int]]] = None, fig = None, ax = None, 
+                    logger_message: Optional[str] = None, manifest_name: Optional[str] = None, 
+                    colored_message_parts: Optional[dict] = None):
     if fig is None or ax is None:
         plt.ion()
         fig, ax = plt.subplots(figsize = (16,10))
@@ -51,16 +56,13 @@ def visualize_state(state: PuzzleState, message: Optional[str] = None, source_lo
             if not cell.exists:
                 # nan
                 ax.text(col + 0.5, y_pos, 'NAN', ha='center', va='center', fontsize = 9, fontweight = 'bold', color = 'white')
-                ax.text(col + 0.5, y_pos - 0.2, f'{cell.weight}', ha='center', va = 'center', fontsize = 8, color = 'white')
             elif cell.description == "UNUSED":
                 # unused
                 ax.text(col + 0.5, y_pos, 'UNUSED', ha='center', va='center', fontsize = 9, fontweight = 'bold', color = '#666666')
-                ax.text(col + 0.5, y_pos - 0.2, f'{cell.weight}', ha='center', va = 'center', fontsize = 8, color = 'black')
             else:
                 # containers
                 desc = cell.description[:8] + "..." if len(cell.description) > 8 else cell.description
-                ax.text(col + 0.5, y_pos + 0.2, desc, ha = 'center', va ='center', fontsize = 10, fontweight = 'bold', color = 'white')
-                ax.text(col + 0.5, y_pos - 0.2, f'{cell.weight}', ha='center', va = 'center', fontsize = 8, color = 'white')
+                ax.text(col + 0.5, y_pos, desc, ha = 'center', va ='center', fontsize = 10, fontweight = 'bold', color = 'white')
 
     ax.set_xticks([i + 0.5 for i in range(cols)])
     ax.set_xticklabels(range(1, cols + 1))
@@ -70,10 +72,15 @@ def visualize_state(state: PuzzleState, message: Optional[str] = None, source_lo
     ax.set_yticklabels(range(1, rows + 1))
     ax.set_ylabel('Row', fontsize = 12, fontweight = 'bold')
 
-    title = 'Shipping Container Grid'
+    title = manifest_name
     if message:
         title += f'\n{message}'
-    ax.set_title(title, fontsize = 14, fontweight = 'bold', pad = 20)
+    ax.set_title(title, fontsize = 14, fontweight = 'bold', pad = 30)
+
+    if colored_message_parts:
+        render_colored_message(ax, colored_message_parts)
+    elif logger_message:
+        ax.text(0.5, 1.02, logger_message, transform = ax.transAxes, ha = 'center', va = 'bottom', fontsize = 12, fontweight = 'normal')
 
     plt.tight_layout()
     plt.grid(False)
@@ -81,23 +88,61 @@ def visualize_state(state: PuzzleState, message: Optional[str] = None, source_lo
     plt.pause(0.001)
     return fig, ax
 
-def visualize_steps(initial_state: PuzzleState, all_moves: List[List[tuple[int, int]]]):
+def render_colored_message(ax, parts):
+    fontsize = 12
+    y_pos = 1.02
+    full_text = parts.get('counter', '') + parts. get('source', '') + parts.get('action', '') + parts.get('target', '')
+    fig = ax.get_figure()
+    renderer = fig.canvas.get_renderer()
+
+    text_to_measure = ax.text(0,0, full_text, fontsize = fontsize, transform = ax.transAxes)
+    bounds = text_to_measure.get_window_extent(renderer = renderer)
+    text_to_measure.remove()
+
+    bounds_axes = bounds.transformed(ax.transAxes.inverted())
+    total_width = bounds_axes.width
+    x_start = 0.5 - total_width / 2
+    x_pos = x_start
+    
+    text_parts = [
+        (parts.get('counter', '' ''), 'black'),
+        (parts.get('source', ''), '#17DD1E'),
+        (parts.get('action', '' ''), 'black'),
+        (parts.get('target', '' ''), '#CB1609'),
+    ]
+
+    for text, color in text_parts:
+        if text:
+            t = ax.text(x_pos, y_pos, text, transform = ax.transAxes, ha = 'left', va = 'bottom', fontsize = fontsize, fontweight = 'normal', color = color)
+            bounds = t.get_window_extent(renderer=renderer)
+            bounds_axes = bounds.transformed(ax.transAxes.inverted())
+            x_pos += bounds_axes.width
+
+def visualize_steps(initial_state: PuzzleState, all_moves: List[List[tuple[int, int]]], on_complete_callback = None, num_moves: int = 0, duration: float = 0.0):
     curr_state = copy.deepcopy(initial_state)
+    base_name = manifest_io.MANIFEST_FILENAME
+    manifest_name = base_name[:-4] + "OUTBOUND.txt"
+    is_balanced = num_moves == 0
     state_tracker = {
         'move_index': -1,
         'all_moves': all_moves,
         'curr_state': curr_state,
         'fig': None,
         'ax': None,
-        'finished': False,
         'text_box': None,
         'text_box_ax': None,
-        'input_mode': False
+        'input_mode': False,
+        'initial_state': initial_state,
+        'on_complete': on_complete_callback,
+        'current_logger_message': None,
+        'solution_message': "" if is_balanced else f"Balance solution found, it will require {num_moves} moves/{duration:.2f} seconds.",
+        'manifest_name': manifest_name,
+        'total_moves': len(all_moves),
+        'is_balanced': is_balanced,
     }
     def on_text_submit(text):
         if text.strip():
             logger.log_message(text.strip())
-            print(f"Logged: {text.strip()}")
         hide_text_input()
 
     def show_text_input():
@@ -117,23 +162,36 @@ def visualize_steps(initial_state: PuzzleState, all_moves: List[List[tuple[int, 
 
     def on_key_press(event):
         if state_tracker['input_mode']:
+            if event.key == 'escape':
+                hide_text_input()
             return
         
-        if event.key == 'q':
-            plt.close('all')
-            state_tracker['finished'] = True
+        if event.key == 'r':
+            hide_text_input()
+            logger.log_finish_operation()
+            logger.write_logger_to_desktop()
+            state_tracker['fig'].canvas.mpl_disconnect(state_tracker.get('key_handler_id'))
+            if state_tracker['on_complete']:
+                state_tracker['on_complete']()
             return
         
         if event.key == 'p':
             show_text_input()
             return
+        if state_tracker['is_balanced']:
+            if event.key == 'enter' or event.key ==' ':
+                visualize_state(state_tracker['curr_state'], "Updated Manifest - 'q' to quit, 'p' to log, 'r' to load new manifest", fig=state_tracker['fig'], ax=state_tracker['ax'], manifest_name=state_tracker['manifest_name'])
+                ax.text(0.5, 1.02, "Reminder: Email file in output folder to captain", transform = ax.transAxes, ha = 'center', va = 'bottom', fontsize = 12, fontweight = 'normal')
+                return
 
         if event.key == 'enter' or event.key == ' ':
             state_tracker['move_index'] += 1
 
-            # Last state
+            # Last statef
             if state_tracker['move_index'] >= len(state_tracker['all_moves']):
-                visualize_state(state_tracker['curr_state'], "Final State (press q to quit, p to log)", fig=state_tracker['fig'], ax=state_tracker['ax'])
+                visualize_state(state_tracker['curr_state'], "Updated Manifest - 'q' to quit, 'p' to log, 'r' to load new manifest", fig=state_tracker['fig'], ax=state_tracker['ax'], manifest_name=state_tracker['manifest_name'])
+                ax.text(0.5, 1.02, "Reminder: Email file in output folder to captain", transform = ax.transAxes, ha = 'center', va = 'bottom', fontsize = 12, fontweight = 'normal')
+
                 return
             
             start_pos, end_pos = state_tracker['all_moves'][state_tracker['move_index']]
@@ -144,19 +202,42 @@ def visualize_steps(initial_state: PuzzleState, all_moves: List[List[tuple[int, 
             strPrev_pos = f"[0{prev_pos[0]},0{prev_pos[1]}]"
             strUpdated_pos = f"[0{updated_pos[0]},0{updated_pos[1]}]"
 
+            current_move_num = state_tracker['move_index'] + 1
+            total_moves = state_tracker['total_moves']
             # INITIAL MOVE
             if start_x == 8 and start_y == 0:
                 source_locations = []
                 target_locations = [end_pos]
+                #move_message = f"{current_move_num} of {total_moves}: PARK was moved to {strUpdated_pos}"
                 logger.log_message(f"PARK was moved to {strUpdated_pos}")
+                colored_parts = {
+                    'counter': f"{current_move_num} of {total_moves}: ",
+                    'source': "PARK",
+                    'action': " was moved to ",
+                    'target': strUpdated_pos
+                }
             # FINAL MOVE
             elif end_x == 8 and end_y == 0:
                 source_locations = [start_pos]
                 target_locations = []
+                #move_message = f"{current_move_num} of {total_moves}: {strPrev_pos} was moved to PARK"
                 logger.log_message(f"{strPrev_pos} was moved to PARK")
+                colored_parts = {
+                    'counter': f"{current_move_num} of {total_moves}: ",
+                    'source': strPrev_pos,
+                    'action': " was moved to ",
+                    'target': "PARK"
+                }
             # NORMAL MOVE
             else:
+                #move_message = f"{current_move_num} of {total_moves}: {strPrev_pos} was moved to {strUpdated_pos}"
                 logger.log_message(f"{strPrev_pos} was moved to {strUpdated_pos}")
+                colored_parts = {
+                    'counter': f"{current_move_num} of {total_moves}: ",
+                    'source': strPrev_pos,
+                    'action': " was moved to ",
+                    'target': strUpdated_pos
+                }
                 container = state_tracker['curr_state'].grid[start_x][start_y]
                 source_locations = [start_pos]
                 target_locations = [end_pos]
@@ -165,15 +246,109 @@ def visualize_steps(initial_state: PuzzleState, all_moves: List[List[tuple[int, 
                
                 # Clear prev position
                 state_tracker['curr_state'].grid[start_x][start_y] = Cell(exists=True, weight=0, description="UNUSED")
-            visualize_state(state_tracker['curr_state'], "Press ENTER to continue, 'p' to log, 'q' to quit", source_locations, target_locations, fig = state_tracker['fig'], ax=state_tracker['ax'])
+            visualize_state(state_tracker['curr_state'], "Press ENTER to continue, 'p' to log, 'q' to quit", source_locations, target_locations, fig = state_tracker['fig'], ax=state_tracker['ax'], colored_message_parts=colored_parts, manifest_name=state_tracker['manifest_name'])
                 
 
-    plt.ion()
-    fig, ax = plt.subplots(figsize = (16,10))
+    fig = plt.gcf()
+    ax = plt.gca()
     state_tracker['fig'] = fig
     state_tracker['ax'] = ax
+    
+    state_tracker['key_handler_id'] = fig.canvas.mpl_connect('key_press_event', on_key_press)
     fig.canvas.mpl_connect('key_press_event', on_key_press)
-    visualize_state(curr_state, "Initial State - ENTER to continue, 'p' to log, 'q' to quit", fig = fig, ax = ax)
-    plt.show(block=True)
-    plt.ioff()
+    initial_message = "Manifest Already Balanced - ENTER to continue, 'p' to log, 'q' to quit" if is_balanced else "Initial Manifest - ENTER to continue, 'p' to log, 'q' to quit"
+    visualize_state(curr_state, initial_message, fig = fig, ax = ax, logger_message=state_tracker['solution_message'], manifest_name=state_tracker['manifest_name'])
+    fig.canvas.draw()
+    
+def run_interface():
+    state_tracker = {
+        'curr_state': None,
+        'fig': None,
+        'ax': None,
+        'text_box': None,
+        'text_box_ax': None,
+        'input_mode': True,
+        'load_button': None,
+        'load_button_ax': None,
+    }
+    
+    def on_manifest_submit(filename):
+        if not filename.strip():
+            print("No filename provided")
+            return
+        try:
+            file_path = "data/" + filename.strip()
+            manifest_io.MANIFEST_FILENAME = filename.strip()
 
+            # Reset logger for new manifest
+            logger.events = []
+            logger.start_time = None
+            logger.initialize_logger()
+            
+            puzzle = manifest_io.load_ship_manifest(file_path)
+
+            # Run algorithm here
+            finalCost, finalPuzzleState, allMoves = search_algorithm.uniformCostSearch(puzzle)
+            duration = finalCost / 60.0
+            logger.log_balance_sol(len(allMoves), duration)
+
+            hide_input_ui()
+            visualize_steps(puzzle, allMoves, on_complete_callback=show_input_ui, num_moves=len(allMoves), duration=duration)
+
+        except FileNotFoundError:
+            print(f"Error: File '{filename}' not found in data/ directory")
+        except Exception as e:
+            print(f"Error loading manifest: {e}")
+
+    def show_input_ui():
+        state_tracker['input_mode'] = True
+        if state_tracker['fig'] is None:
+            plt.ion()
+            state_tracker['fig'], state_tracker['ax'] = plt.subplots(figsize = (16,10))
+            state_tracker['fig'].canvas.mpl_connect('close_event', on_close)
+        
+        # Clean slate
+        state_tracker['fig'].clear()
+        state_tracker['ax'] = state_tracker['fig'].add_subplot(111)
+        state_tracker['ax'].set_xlim(0,12)
+        state_tracker['ax'].set_ylim(0,8)
+        state_tracker['ax'].axis('off')
+
+        # Menu title
+        state_tracker['ax'].text(6,6, 'Load Balancing System', ha='center', va='center', fontsize=25, fontweight = 'bold')
+        state_tracker['ax'].text(6,5, 'Please enter manifest to load', ha='center', va='center', fontsize=14)
+
+        # Menu input
+        state_tracker['text_box_ax'] = state_tracker['fig'].add_axes([0.3, 0.45, 0.4, 0.05])
+        state_tracker['text_box'] = TextBox(state_tracker['text_box_ax'], 'Manifest:', initial='')
+        state_tracker['text_box'].on_submit(on_manifest_submit)
+
+        # Menu buttons
+        state_tracker['load_button_ax'] = state_tracker['fig'].add_axes([0.45, 0.35, 0.1, 0.05])
+        state_tracker['load_button'] = Button(state_tracker['load_button_ax'], 'Load')
+        state_tracker['load_button'].on_clicked(lambda event: on_manifest_submit(state_tracker['text_box'].text))
+        
+        state_tracker['fig'].canvas.draw()
+    
+    def hide_input_ui():
+        if state_tracker['text_box_ax'] is not None:
+            state_tracker['text_box_ax'].remove()
+            state_tracker['text_box_ax'] = None
+            state_tracker['text_box'] = None
+        
+        if state_tracker['load_button_ax'] is not None:
+            state_tracker['load_button_ax'].remove()
+            state_tracker['load_button_ax'] = None
+            state_tracker['load_button'] = None
+        state_tracker['input_mode'] = False
+    
+    def on_close(event):
+        logger.log_finish_operation()
+        logger.log_kill()
+        logger.write_logger_to_desktop()
+        plt.close('all')
+    
+    show_input_ui()
+    plt.show(block = True)
+    plt.ioff()
+            

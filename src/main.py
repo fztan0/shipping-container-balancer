@@ -8,26 +8,28 @@ def main():
       # example receive
       logger.initialize_logger()
 
-      puzzle = manifest_io.load_manifest_from_user()
+      # puzzle = manifest_io.load_manifest_from_user()
 
-      debug.debug_print_formatted_loaded_manifest(puzzle)
-      # debug.debug_print_raw_loaded_manifest(puzzle_state)
-      debug.debug_print_weight_grid(puzzle)
-      #debug.debug_print_totalWeight_eachSide(puzze)
-      #debug.debug_getContainers(puzzle)
-      #debug.debug_validContainers(puzzle)
-      #debug.debug_getNextPosition(puzzle)
-      #debug.debug_testCraneCost(puzzle)
-      # debug.debug_updateState(puzzle)
-      #debug.debug_bfs(puzzle)
+      # debug.debug_print_formatted_loaded_manifest(puzzle)
+      # # debug.debug_print_raw_loaded_manifest(puzzle_state)
+      # debug.debug_print_weight_grid(puzzle)
+      # #debug.debug_print_totalWeight_eachSide(puzze)
+      # #debug.debug_getContainers(puzzle)
+      # #debug.debug_validContainers(puzzle)
+      # #debug.debug_getNextPosition(puzzle)
+      # #debug.debug_testCraneCost(puzzle)
+      # # debug.debug_updateState(puzzle)
+      # #debug.debug_bfs(puzzle)
+      # # debug.debug_ucsAlg(puzzle)
+
       # debug.debug_ucsAlg(puzzle)
 
-      debug.debug_ucsAlg(puzzle)
 
+      # logger.log_finish_operation()
+      # logger.log_kill()
+      # logger.write_logger_to_desktop()
 
-      logger.log_finish_operation()
-      logger.log_kill()
-      logger.write_logger_to_desktop()
+      visualization.run_interface()
 
 
 
