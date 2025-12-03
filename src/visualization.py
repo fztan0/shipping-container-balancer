@@ -208,14 +208,16 @@ def visualize_steps(initial_state: PuzzleState, all_moves: List[List[tuple[int, 
             current_move_num = state_tracker['move_index'] + 1
             total_moves = state_tracker['total_moves']
             duration_text = f" (Duration: {move_cost} min)"
+            move_counter = f"{current_move_num} of {total_moves}: " 
+
             # INITIAL MOVE
             if start_x == 8 and start_y == 0:
                 source_locations = []
                 target_locations = [end_pos]
                 #move_message = f"{current_move_num} of {total_moves}: PARK was moved to {strUpdated_pos}"
-                logger.log_message(f"PARK was moved to {strUpdated_pos}{duration_text}")
+                logger.log_message(f"{move_counter}PARK was moved to {strUpdated_pos}{duration_text}")
                 colored_parts = {
-                    'counter': f"{current_move_num} of {total_moves}: ",
+                    'counter': move_counter,
                     'source': "PARK",
                     'action': " was moved to ",
                     'target': strUpdated_pos,
@@ -226,9 +228,9 @@ def visualize_steps(initial_state: PuzzleState, all_moves: List[List[tuple[int, 
                 source_locations = [start_pos]
                 target_locations = []
                 #move_message = f"{current_move_num} of {total_moves}: {strPrev_pos} was moved to PARK"
-                logger.log_message(f"{strPrev_pos} was moved to PARK{duration_text}")
+                logger.log_message(f"{move_counter}{strPrev_pos} was moved to PARK{duration_text}")
                 colored_parts = {
-                    'counter': f"{current_move_num} of {total_moves}: ",
+                    'counter': move_counter,
                     'source': strPrev_pos,
                     'action': " was moved to ",
                     'target': "PARK",
@@ -237,9 +239,9 @@ def visualize_steps(initial_state: PuzzleState, all_moves: List[List[tuple[int, 
             # NORMAL MOVE
             else:
                 #move_message = f"{current_move_num} of {total_moves}: {strPrev_pos} was moved to {strUpdated_pos}"
-                logger.log_message(f"{strPrev_pos} was moved to {strUpdated_pos}{duration_text}")
+                logger.log_message(f"{move_counter}{strPrev_pos} was moved to {strUpdated_pos}{duration_text}")
                 colored_parts = {
-                    'counter': f"{current_move_num} of {total_moves}: ",
+                    'counter': move_counter,
                     'source': strPrev_pos,
                     'action': " was moved to ",
                     'target': strUpdated_pos,
