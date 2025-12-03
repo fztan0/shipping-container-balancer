@@ -1,0 +1,5 @@
+12 03 2025: 03:09:31 Program was started.
+12 03 2025: 03:09:31 Manifest extraTestCase.txt is opened, there are 1 on the ship.
+12 03 2025: 03:09:31 Balance solution found, it will require 0 moves/0 minute(s).
+12 03 2025: 03:09:36 Finished a Cycle. Manifest extraTestCaseOUTBOUND.txt was written to desktop, and a reminder pop-up to operator to send file was displayed.
+12 03 2025: 03:09:36 Program was shut down.

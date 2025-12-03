@@ -1,0 +1,5 @@
+12 03 2025: 03:16:04 Program was started.
+12 03 2025: 03:16:04 Manifest ShipCase2.txt is opened, there are 0 on the ship.
+12 03 2025: 03:16:04 Balance solution found, it will require 0 moves/0 minute(s).
+12 03 2025: 03:16:06 Finished a Cycle. Manifest ShipCase2OUTBOUND.txt was written to desktop, and a reminder pop-up to operator to send file was displayed.
+12 03 2025: 03:16:06 Program was shut down.
