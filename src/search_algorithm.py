@@ -1,13 +1,13 @@
-import puzzle_state
-import move_operators
-import search_nodes
+from . import puzzle_state
+from . import move_operators
+from . import search_nodes
+from . import hashing
+from . import heuristics
 import heapq
-import hashing
-import itertools # https://docs.python.org/3/library/itertools.html#itertools.count. using this python library to get a unique count
+import itertools
 import copy
 import math
 import time
-import heuristics
 
 '''
 Parameters:
@@ -164,11 +164,9 @@ def uniformCostSearch(startingState: puzzle_state.PuzzleState) -> 'Path & Cost':
 
 
             search_time = time.time() - search_start_time
-            print(f"Solution found: cost={currentCost}, nodes processed={node_count}, time={search_time:.2f}s")
-            print(f"Final nodes processed: {node_count}")
-
-
-            return currentCost, currentState, movesContainer,intermediateCost
+            move_count = len(movesContainer)
+            print(f"Solution found: cost={currentCost}, moves={move_count}, nodes expanded={node_count}, time={search_time:.2f}s")
+            return (currentCost, currentState, movesContainer, intermediateCost, move_count, node_count)
         #gets all the containers in the state
         containers = move_operators.getAllContainers(currentState)
         #filters and only get valid containers
@@ -227,7 +225,7 @@ def uniformCostSearch(startingState: puzzle_state.PuzzleState) -> 'Path & Cost':
     currentMoves.append([(endX,endY), (8,0)])
     search_time = time.time() - search_start_time
 
-    print(f"No optimal goal found (best diff), cost={currentCost}, nodes processed={node_count}, time={search_time:.2f}s")
-
-    return currentCost, currentState, currentMoves, costList
+    move_count = len(currentMoves)
+    print(f"No optimal goal found (best diff), cost={currentCost}, moves={move_count}, nodes expanded={node_count}, time={search_time:.2f}s")
+    return (currentCost, currentState, currentMoves, costList, move_count, node_count)
 
