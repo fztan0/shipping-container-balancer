@@ -213,8 +213,8 @@ def visualize_steps(initial_state: PuzzleState, all_moves: List[List[tuple[int, 
             end_x, end_y = end_pos
             prev_pos = (start_x + 1, start_y + 1)
             updated_pos = (end_x + 1, end_y + 1)
-            strPrev_pos = f"[0{prev_pos[0]},0{prev_pos[1]}]"
-            strUpdated_pos = f"[0{updated_pos[0]},0{updated_pos[1]}]"
+            strPrev_pos = f"[{prev_pos[0]:02d},{prev_pos[1]:02d}]"
+            strUpdated_pos = f"[{updated_pos[0]:02d},{updated_pos[1]:02d}]"
 
             current_move_num = state_tracker['move_index'] + 1
             total_moves = state_tracker['total_moves']
