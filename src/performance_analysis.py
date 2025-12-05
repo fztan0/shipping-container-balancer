@@ -7,6 +7,7 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from src import search_algorithm as sa
 from src import manifest_parser as mp
+from src.puzzle_state import PuzzleState
 
 def run_experiments(test_files):
     results = []
@@ -23,7 +24,7 @@ def run_experiments(test_files):
                     line = line.strip()
                     if line:
                         manifest.append(mp.parse_manifest_line(line))
-            state = mp.create_initial_state(manifest)
+            state = PuzzleState.generate_state_from_manifest_data(manifest)
 
             start_time = time.time()
             result = sa.uniformCostSearch(state)

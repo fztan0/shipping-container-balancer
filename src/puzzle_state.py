@@ -28,14 +28,21 @@ class PuzzleState:
       def generate_state_from_manifest_data(cls, manifest_data: List[tuple[int, int, int, str]]) -> 'PuzzleState':
             state = cls.create_empty()
             num_containers = 0
+            # Convert 1-based coordinates to 0-based indexes
             for row, col, weight, desc in manifest_data:
+                  adj_row = row - 1
+                  adj_col = col - 1
+
                   if desc == "NAN":
-                        state.grid[row][col] = Cell(exists = False, weight = 0, description=desc)
+                        state.grid[adj_row][adj_col] = Cell(exists=False, weight=0, description=desc)
                   elif desc == "UNUSED":
-                        state.grid[row][col] = Cell(exists = True, weight = 0, description=desc)
+                        state.grid[adj_row][adj_col] = Cell(exists=True, weight=0, description=desc)
                   else:
-                        state.grid[row][col] = Cell(exists = True, weight = weight, description=desc)
-                  
+                        state.grid[adj_row][adj_col] = Cell(exists=True, weight=weight, description=desc)
+
+                  if weight != 0:
+                        num_containers += 1
+
                   if weight != 0:
                         num_containers += 1
             logger.log_manifest_opened(num_containers)

@@ -114,7 +114,7 @@ def uniformCostSearch(startingState: puzzle_state.PuzzleState) -> 'Path & Cost':
     uniqueId = itertools.count() #iterator
     #if starting state is the goal return an empty list. No moves required
     if valid_edgecase_initialContainers(startingState) == True:
-        return (0, startingState, [], [0])
+        return (0, startingState, [], [0], 0, 0)
     hashMap = {}
     key = hashing.createKey(startingState)
     hashMap[key] = True
