@@ -1,9 +1,0 @@
-12 03 2025: 03:16:33 Program was started.
-12 03 2025: 03:16:33 Manifest ShipCase4.txt is opened, there are 3 on the ship.
-12 03 2025: 03:16:35 Balance solution found, it will require 4 moves/32 minute(s).
-12 03 2025: 03:16:35 1 of 4: PARK was moved to [02,02] (Duration: 8 min)
-12 03 2025: 03:16:35 2 of 4: [02,02] was moved to [02,01] (Duration: 1 min)
-12 03 2025: 03:16:36 3 of 4: [01,02] was moved to [01,07] (Duration: 9 min)
-12 03 2025: 03:16:36 4 of 4: [01,07] was moved to PARK (Duration: 14 min)
-12 03 2025: 03:16:38 Finished a Cycle. Manifest ShipCase4OUTBOUND.txt was written to desktop, and a reminder pop-up to operator to send file was displayed.
-12 03 2025: 03:16:38 Program was shut down.
