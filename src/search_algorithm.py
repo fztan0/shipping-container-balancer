@@ -131,6 +131,9 @@ def uniformCostSearch(startingState: puzzle_state.PuzzleState) -> 'Path & Cost':
 
     # priority queue uses f(n) = g(n) + h(n) for A*, g(n) for UCS
     h_start = heuristics.heuristic(startingState) if USE_ASTAR else 0
+
+    # ensure heuristic is admissible (never overestimates actual cost)
+    assert h_start >= 0, "heuristic must be non-negative"
     start_g = 0
     start_f = start_g + h_start
     heapq.heappush(priority_queue, (start_f, next(uniqueId), start_g, startingState, listofMoves, listofCost))

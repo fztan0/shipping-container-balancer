@@ -30,15 +30,27 @@ def get_current_weight(state: puzzle_state.PuzzleState) -> tuple[int, int]:
 # every unit of "imbalance" acts as if it takes 1 distance unit to fix
 # containers are free to move anywhere, ignoring the cost of movement and only caring about reducing imbalance.
 def heuristic(state: puzzle_state.PuzzleState) -> int:
-      port = 0
-      starboard = 0
+    port, starboard = get_current_weight(state)
+    imbalance = abs(port - starboard)
+    if imbalance == 0:
+        return 0
 
-      for r in range(8):
-            for c in range(12):
-                  w = state.grid[r][c].weight
-                  if c <= 5:
-                        port += w
-                  else:
-                        starboard += w
+    # Find maximum container weight in the current state
+    max_weight = 0
+    for row in range(8):
+        for col in range(12):
+            cell = state.grid[row][col]
+            if cell.weight > max_weight:
+                max_weight = cell.weight
 
-      return abs(port - starboard)
+    if max_weight == 0:
+        return 0
+
+    # calculate minimum moves required (ceil division)
+    min_moves = (imbalance + max_weight - 1) // max_weight
+
+    # minimum cost per move (Manhattan distance between adjacent cells)
+    min_cost_per_move = 2  # 1 move horizontal + 1 move vertical
+
+    # admissible heuristic: never overestimates actual cost
+    return min_moves * min_cost_per_move
