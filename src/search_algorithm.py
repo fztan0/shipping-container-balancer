@@ -146,7 +146,7 @@ def uniformCostSearch(startingState: puzzle_state.PuzzleState) -> 'Path & Cost':
             # print(f"Explored {node_count} nodes...")
 
 
-        ph,sh = heuristics.get_current_weight(currentState)
+        ph,sh = getCurrentWeight(currentState)
         if(abs(ph-sh) < currentDifference):
             currentDifference = abs(ph-sh)
             finalResult_Difference = (current_g, currentState, currentMoves, costList)

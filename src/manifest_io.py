@@ -5,7 +5,7 @@ MANIFEST_FILENAME = ""
 
 def get_file_name() -> str:
       global MANIFEST_FILENAME
-      
+
       input_file_name = input("Enter name of manifest: ")
 
       if not input_file_name:
